@@ -41,8 +41,9 @@
         <button type="submit">Filter</button>
     </form>
 
-    <p><b>Average rating:</b> {{ number_format($avgRating, 2) }}</p>
+    <p><b>Average rating:</b> {{ $avgRating ? number_format($avgRating, 2) : '0.00' }}</p>
     <hr>
+
 
 
     <p><a href="/feedback">Back to Form</a></p>

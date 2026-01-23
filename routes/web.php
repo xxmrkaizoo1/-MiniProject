@@ -2,10 +2,17 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\FeedbackController;
 
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::get('/admin/feedback', [FeedbackController::class, 'index']);
+Route::get('/feedback', [FeedbackController::class, 'create']);
+Route::post('/feedback', [FeedbackController::class, 'store']);
+
+
 
 Route::get('/dashboard', function () {
     return view('dashboard');

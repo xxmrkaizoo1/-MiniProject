@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use Illuminate\Http\Request;
 use App\Models\Feedback;
 use App\Http\Controllers\Controller;
@@ -18,14 +19,14 @@ class FeedbackController extends Controller
         $validated = $request->validate([
             'subject' => 'required|string|max:100',
             'rating'  => 'required|integer|min:1|max:5',
-            'comment' => 'nullable|string|max:1000',
+            'comments' => 'nullable|string|max:1000',
             'is_anonymous' => 'nullable|boolean',
         ]);
 
         Feedback::create([
             'subject' => $validated['subject'],
             'rating' => $validated['rating'],
-            'comment' => $validated['comment'] ?? null,
+            'comments' => $validated['comments'] ?? null,
             'is_anonymous' => $request->has('is_anonymous'),
         ]);
 
@@ -33,23 +34,21 @@ class FeedbackController extends Controller
     }
 
 
-  public function index(Request $request)
-{
-    $subject = $request->query('subject');
+    public function index(Request $request)
+    {
+        $subject = $request->query('subject');
 
-    $query = \App\Models\Feedback::query();
+        $query = Feedback::query();
 
-    if ($subject) {
-        $query->where('subject', $subject);
+        if ($subject) {
+            $query->where('subject', $subject);
+        }
+
+        $feedbacks = $query->latest()->get();
+        $avgRating = (clone $query)->avg('rating'); // average ikut filter
+
+        $subjects = Feedback::select('subject')->distinct()->pluck('subject');
+
+        return view('admin.index', compact('feedbacks', 'avgRating', 'subjects', 'subject'));
     }
-
-    $feedbacks = $query->latest()->get();
-
-    $avgRating = $query->avg('rating');
-
-    $subjects = \App\Models\Feedback::select('subject')->distinct()->pluck('subject');
-
-    return view('admin.index', compact('feedbacks', 'avgRating', 'subjects', 'subject'));
-}
-
 }
