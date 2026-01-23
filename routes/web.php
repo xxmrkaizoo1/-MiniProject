@@ -12,3 +12,5 @@ Route::post('/feedback' , [FeedbackController::class, 'store']);
 Route::get('/Admin/feedback' , [FeedbackController::class, 'index'])->name('admin.index');
 
 
+
+

@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Feedback;
 use App\Http\Controllers\Controller;
-
+use Illuminate\Support\Facades\DB;
 
 class FeedbackController extends Controller
 {
@@ -32,11 +32,24 @@ class FeedbackController extends Controller
         return redirect('/feedback')->with('success', 'Feedback submitted!');
     }
 
-    public function index()
-    {
-        $feedbacks = Feedback::latest()->get();
-        return view('admin.index', compact('feedbacks'));
 
+  public function index(Request $request)
+{
+    $subject = $request->query('subject');
 
+    $query = \App\Models\Feedback::query();
+
+    if ($subject) {
+        $query->where('subject', $subject);
     }
+
+    $feedbacks = $query->latest()->get();
+
+    $avgRating = $query->avg('rating');
+
+    $subjects = \App\Models\Feedback::select('subject')->distinct()->pluck('subject');
+
+    return view('admin.index', compact('feedbacks', 'avgRating', 'subjects', 'subject'));
+}
+
 }
