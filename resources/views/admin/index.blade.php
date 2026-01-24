@@ -20,7 +20,7 @@
             <tr>
                 <td>{{ $f->subject }}</td>
                 <td>{{ $f->rating }}</td>
-                <td>{{ $f->comment }}</td>
+                <td>{{ $f->comments }}</td>
                 <td>{{ $f->is_anonymous ? 'Yes' : 'No' }}</td>
                 <td>{{ $f->created_at }}</td>
             </tr>

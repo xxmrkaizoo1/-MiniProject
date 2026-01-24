@@ -8,9 +8,17 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/admin/feedback', [FeedbackController::class, 'index']);
+
 Route::get('/feedback', [FeedbackController::class, 'create']);
 Route::post('/feedback', [FeedbackController::class, 'store']);
+
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::get('/admin/feedback', [FeedbackController::class, 'index']);
+});
+
+
+
+
 
 
 

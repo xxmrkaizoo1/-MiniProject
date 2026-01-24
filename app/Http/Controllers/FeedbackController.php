@@ -30,6 +30,8 @@ class FeedbackController extends Controller
             'is_anonymous' => $request->has('is_anonymous'),
         ]);
 
+
+
         return redirect('/feedback')->with('success', 'Feedback submitted!');
     }
 
@@ -44,8 +46,8 @@ class FeedbackController extends Controller
             $query->where('subject', $subject);
         }
 
-        $feedbacks = $query->latest()->get();
-        $avgRating = (clone $query)->avg('rating'); // average ikut filter
+        $feedbacks = \App\Models\Feedback::latest()->get();
+        $avgRating = (clone $query)->avg('rating');
 
         $subjects = Feedback::select('subject')->distinct()->pluck('subject');
 
