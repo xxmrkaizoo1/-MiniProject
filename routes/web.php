@@ -5,22 +5,17 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\ClassroomController;
-use App\Http\Controllers\LecturerDashboardController;
+use App\Http\Controllers\LecturerChatbotController;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
-
-Route::middleware(['auth', 'role:student'])->group(function () {
-    Route::get('/feedback', [FeedbackController::class, 'create'])->name('feedback.create');
-    Route::post('/feedback', [FeedbackController::class, 'store'])->name('feedback.store');
-});
+Route::get('/feedback', [FeedbackController::class, 'create']);
+Route::post('/feedback', [FeedbackController::class, 'store']);
 
 Route::middleware(['auth', 'admin'])->group(function () {
-    Route::get('/admin/feedback', [FeedbackController::class, 'index'])->name('admin.feedback.index');
-    Route::get('/admin/feedback/export/{format}', [FeedbackController::class, 'export'])
-        ->name('admin.feedback.export');
+    Route::get('/admin/feedback', [FeedbackController::class, 'index']);
     Route::get('/admin/subjects', [SubjectController::class, 'index'])->name('admin.subjects.index');
     Route::post('/admin/subjects', [SubjectController::class, 'store'])->name('admin.subjects.store');
     Route::get('/admin/classes', [ClassroomController::class, 'index'])->name('admin.classrooms.index');
@@ -29,9 +24,13 @@ Route::middleware(['auth', 'admin'])->group(function () {
         ->name('admin.classrooms.enrollments.store');
 });
 
-Route::get('/dashboard', [LecturerDashboardController::class, 'index'])
-    ->middleware(['auth', 'verified', 'role:lecturer'])
+Route::get('/dashboard', [LecturerChatbotController::class, 'dashboard'])
+    ->middleware(['auth', 'verified'])
     ->name('dashboard');
+
+Route::post('/lecturer/chatbot', [LecturerChatbotController::class, 'respond'])
+    ->middleware(['auth', 'verified'])
+    ->name('lecturer.chatbot.respond');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -39,4 +38,4 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

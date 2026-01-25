@@ -100,7 +100,7 @@ class User extends Authenticatable
             return 'dashboard';
         }
 
-        return 'feedback.create';
+        return 'welcome';
     }
 
     public function landingUrl(): string

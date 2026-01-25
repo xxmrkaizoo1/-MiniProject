@@ -116,6 +116,92 @@
                             </div>
                         </div>
                     </section>
+
+                    <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-gray-900">
+                        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Lecturer Chatbot Assistant</h3>
+                                <p class="text-sm text-slate-600 dark:text-slate-300">
+                                    Dapatkan cadangan pengajaran berdasarkan kelas dan subjek anda.
+                                </p>
+                            </div>
+                            <span class="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-200">
+                                Smart Advice
+                            </span>
+                        </div>
+
+                        @if (session('chatbot_response'))
+                            <div class="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-100">
+                                {{ session('chatbot_response') }}
+                            </div>
+                        @endif
+
+                        <form method="POST" action="{{ route('lecturer.chatbot.respond') }}" class="mt-6 grid gap-4 lg:grid-cols-3">
+                            @csrf
+                            <div>
+                                <label for="classroom_id" class="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                                    Kelas
+                                </label>
+                                <select id="classroom_id" name="classroom_id" {{ $classrooms->isNotEmpty() ? 'required' : '' }}
+                                    class="mt-2 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
+                                    <option value="">Pilih kelas</option>
+                                    @foreach ($classrooms as $classroom)
+                                        <option value="{{ $classroom->id }}" {{ old('classroom_id') == $classroom->id ? 'selected' : '' }}>
+                                            {{ $classroom->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @if ($classrooms->isEmpty())
+                                    <p class="mt-2 text-xs text-rose-600 dark:text-rose-300">Tiada kelas ditetapkan buat masa ini.</p>
+                                @endif
+                                @error('classroom_id')
+                                    <p class="mt-2 text-xs text-rose-600 dark:text-rose-300">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div>
+                                <label for="subject_id" class="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                                    Subjek
+                                </label>
+                                <select id="subject_id" name="subject_id" required
+                                    class="mt-2 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
+                                    <option value="">Pilih subjek</option>
+                                    @foreach ($subjects as $subject)
+                                        <option value="{{ $subject->id }}" {{ old('subject_id') == $subject->id ? 'selected' : '' }}>
+                                            {{ $subject->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @if ($subjects->isEmpty())
+                                    <p class="mt-2 text-xs text-amber-600 dark:text-amber-300">Subjek belum ditetapkan untuk kelas ini.</p>
+                                @endif
+                                @error('subject_id')
+                                    <p class="mt-2 text-xs text-rose-600 dark:text-rose-300">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div>
+                                <label for="prompt" class="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                                    Nota pensyarah (opsyenal)
+                                </label>
+                                <textarea id="prompt" name="prompt" rows="3"
+                                    class="mt-2 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">{{ old('prompt') }}</textarea>
+                                @error('prompt')
+                                    <p class="mt-2 text-xs text-rose-600 dark:text-rose-300">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div class="lg:col-span-3 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                <button type="submit"
+                                    class="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                                    Dapatkan cadangan
+                                </button>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">
+                                    Cadangan dijana berdasarkan kelas dan subjek yang dipilih.
+                                </p>
+                            </div>
+                        </form>
+                    </section>
                 </div>
             </div>
         </div>
