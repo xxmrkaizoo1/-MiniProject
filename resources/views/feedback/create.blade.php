@@ -65,6 +65,24 @@
                     </div>
 
                     <div>
+                        <label for="mood_rating" class="block text-sm font-medium text-slate-700">Mood Check-In (Emosi Pelajar)</label>
+                        <p class="mt-1 text-sm text-slate-500">Bagaimana perasaan anda selepas kelas?</p>
+                        <input id="mood_rating" type="range" name="mood_rating" min="1" max="5" value="{{ old('mood_rating', 3) }}" required
+                            class="mt-4 w-full accent-indigo-600">
+                        <div class="mt-3 flex items-center justify-between text-xl">
+                            <span title="Sangat sedih">😞</span>
+                            <span title="Sedih">😕</span>
+                            <span title="Neutral">😐</span>
+                            <span title="Gembira">🙂</span>
+                            <span title="Sangat gembira">😄</span>
+                        </div>
+                        <div class="mt-2 flex items-center justify-between text-xs text-slate-500">
+                            <span>Rendah</span>
+                            <span>Tinggi</span>
+                        </div>
+                    </div>
+
+                    <div>
                         <label for="comments" class="block text-sm font-medium text-slate-700">Comment</label>
                         <textarea id="comments" name="comments" rows="5"
                             class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200">{{ old('comments') }}</textarea>

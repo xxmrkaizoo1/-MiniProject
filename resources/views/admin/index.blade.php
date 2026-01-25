@@ -81,6 +81,9 @@
             </div>
 
             <div class="overflow-hidden rounded-2xl bg-white shadow-lg ring-1 ring-slate-200">
+                @php
+                    $moodEmojis = [1 => '😞', 2 => '😕', 3 => '😐', 4 => '🙂', 5 => '😄'];
+                @endphp
                 <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-6 py-4">
                     <h2 class="text-lg font-semibold text-slate-900">Latest Feedback</h2>
                     <div class="flex flex-wrap gap-2">
@@ -99,6 +102,7 @@
                             <tr>
                                 <th class="px-6 py-3 font-semibold">Subject</th>
                                 <th class="px-6 py-3 font-semibold">Rating</th>
+                                <th class="px-6 py-3 font-semibold">Mood</th>
                                 <th class="px-6 py-3 font-semibold">Comment</th>
                                 <th class="px-6 py-3 font-semibold">Anonymous</th>
                                 <th class="px-6 py-3 font-semibold">Date</th>
@@ -114,6 +118,12 @@
                                             {{ $f->rating }} / 5
                                         </span>
                                     </td>
+                                    <td class="px-6 py-4">
+                                        <span class="inline-flex items-center gap-2 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
+                                            <span class="text-base">{{ $moodEmojis[$f->mood_rating] ?? '😐' }}</span>
+                                            {{ $f->mood_rating ?? 3 }} / 5
+                                        </span>
+                                    </td>
                                     <td class="px-6 py-4 text-slate-600">
                                         <p class="line-clamp-2">{{ $f->comments }}</p>
                                     </td>
@@ -127,7 +137,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="px-6 py-10 text-center text-sm text-slate-500">
+                                    <td colspan="6" class="px-6 py-10 text-center text-sm text-slate-500">
                                         No feedback has been submitted yet.
                                     </td>
                                 </tr>
