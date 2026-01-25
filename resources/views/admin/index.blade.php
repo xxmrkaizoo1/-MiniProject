@@ -80,69 +80,10 @@
                 </div>
             </div>
 
-            <div class="grid gap-6 lg:grid-cols-3">
-                <div class="rounded-2xl bg-white p-6 shadow-lg ring-1 ring-slate-200 lg:col-span-2">
-                    <div class="flex flex-col gap-3">
-                        <div>
-                            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Analisis AI</p>
-                            <h2 class="text-xl font-semibold text-slate-900">Ringkasan & Sentimen</h2>
-                        </div>
-                        <p class="text-sm text-slate-600">{{ $analysis['summary'] }}</p>
-                        <div class="grid gap-4 sm:grid-cols-3">
-                            <div class="rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                                <p class="text-xs uppercase tracking-[0.2em] text-emerald-500">Positif</p>
-                                <p class="mt-1 text-2xl font-semibold">{{ $analysis['sentimentCounts']['positive'] }}</p>
-                            </div>
-                            <div class="rounded-xl bg-slate-100 px-4 py-3 text-sm text-slate-700">
-                                <p class="text-xs uppercase tracking-[0.2em] text-slate-500">Neutral</p>
-                                <p class="mt-1 text-2xl font-semibold">{{ $analysis['sentimentCounts']['neutral'] }}</p>
-                            </div>
-                            <div class="rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                                <p class="text-xs uppercase tracking-[0.2em] text-rose-500">Negatif</p>
-                                <p class="mt-1 text-2xl font-semibold">{{ $analysis['sentimentCounts']['negative'] }}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="rounded-2xl bg-white p-6 shadow-lg ring-1 ring-slate-200">
-                    <h3 class="text-base font-semibold text-slate-900">Komen Utama</h3>
-                    <p class="mt-1 text-sm text-slate-500">Sorotan ringkas dari maklum balas.</p>
-                    <div class="mt-4 space-y-3 text-sm text-slate-600">
-                        @forelse ($analysis['highlights'] as $highlight)
-                            <div class="rounded-xl bg-slate-50 px-4 py-3">{{ $highlight }}</div>
-                        @empty
-                            <p class="text-slate-400">Tiada komen untuk diringkaskan.</p>
-                        @endforelse
-                    </div>
-                </div>
-            </div>
-
-            <div class="grid gap-6 lg:grid-cols-2">
-                <div class="rounded-2xl bg-white p-6 shadow-lg ring-1 ring-slate-200">
-                    <h3 class="text-base font-semibold text-slate-900">Tema Utama</h3>
-                    <p class="mt-1 text-sm text-slate-500">Topik yang kerap disebut dalam semua komen.</p>
-                    <div class="mt-4 flex flex-wrap gap-2">
-                        @forelse ($analysis['themes'] as $theme)
-                            <span class="rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">{{ $theme }}</span>
-                        @empty
-                            <span class="text-sm text-slate-400">Tiada tema dikesan.</span>
-                        @endforelse
-                    </div>
-                </div>
-                <div class="rounded-2xl bg-white p-6 shadow-lg ring-1 ring-slate-200">
-                    <h3 class="text-base font-semibold text-slate-900">Isu Berulang</h3>
-                    <p class="mt-1 text-sm text-slate-500">Isu yang banyak muncul dalam maklum balas negatif.</p>
-                    <div class="mt-4 flex flex-wrap gap-2">
-                        @forelse ($analysis['issues'] as $issue)
-                            <span class="rounded-full bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700">{{ $issue }}</span>
-                        @empty
-                            <span class="text-sm text-slate-400">Tiada isu ketara dikesan.</span>
-                        @endforelse
-                    </div>
-                </div>
-            </div>
-
             <div class="overflow-hidden rounded-2xl bg-white shadow-lg ring-1 ring-slate-200">
+                @php
+                    $moodEmojis = [1 => '😞', 2 => '😕', 3 => '😐', 4 => '🙂', 5 => '😄'];
+                @endphp
                 <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-6 py-4">
                     <h2 class="text-lg font-semibold text-slate-900">Latest Feedback</h2>
                     <div class="flex flex-wrap gap-2">
@@ -161,7 +102,7 @@
                             <tr>
                                 <th class="px-6 py-3 font-semibold">Subject</th>
                                 <th class="px-6 py-3 font-semibold">Rating</th>
-                                <th class="px-6 py-3 font-semibold">Sentiment</th>
+                                <th class="px-6 py-3 font-semibold">Mood</th>
                                 <th class="px-6 py-3 font-semibold">Comment</th>
                                 <th class="px-6 py-3 font-semibold">Anonymous</th>
                                 <th class="px-6 py-3 font-semibold">Date</th>
@@ -178,16 +119,9 @@
                                         </span>
                                     </td>
                                     <td class="px-6 py-4">
-                                        <span
-                                            class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold
-                                            @if ($f->sentiment === 'positive')
-                                                bg-emerald-50 text-emerald-700
-                                            @elseif ($f->sentiment === 'negative')
-                                                bg-rose-50 text-rose-700
-                                            @else
-                                                bg-slate-100 text-slate-700
-                                            @endif">
-                                            {{ ucfirst($f->sentiment) }}
+                                        <span class="inline-flex items-center gap-2 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
+                                            <span class="text-base">{{ $moodEmojis[$f->mood_rating] ?? '😐' }}</span>
+                                            {{ $f->mood_rating ?? 3 }} / 5
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 text-slate-600">

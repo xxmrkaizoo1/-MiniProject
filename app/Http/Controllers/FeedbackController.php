@@ -32,13 +32,8 @@ class FeedbackController extends Controller
             'comments' => $validated['comments'] ?? null,
             'is_anonymous' => $request->has('is_anonymous'),
         ]);
-
-
-
         return redirect('/feedback')->with('success', 'Feedback submitted!');
     }
-
-
     public function index(Request $request)
     {
         $subject = $request->query('subject');
@@ -62,18 +57,86 @@ class FeedbackController extends Controller
     private function buildAiAnalysis($feedbacks, $avgRating): array
     {
         $positiveKeywords = [
-            'bagus', 'terbaik', 'mantap', 'hebat', 'puas', 'baik', 'menarik', 'jelas', 'efektif',
-            'suka', 'love', 'great', 'excellent', 'good', 'helpful', 'clear', 'awesome',
+            'bagus',
+            'terbaik',
+            'mantap',
+            'hebat',
+            'puas',
+            'baik',
+            'menarik',
+            'jelas',
+            'efektif',
+            'suka',
+            'love',
+            'great',
+            'excellent',
+            'good',
+            'helpful',
+            'clear',
+            'awesome',
         ];
         $negativeKeywords = [
-            'teruk', 'buruk', 'lemah', 'bosan', 'mengelirukan', 'sukar', 'lambat', 'delay', 'bad',
-            'poor', 'confusing', 'hard', 'difficult', 'slow', 'worst', 'tidak puas', 'tak puas',
+            'teruk',
+            'buruk',
+            'lemah',
+            'bosan',
+            'mengelirukan',
+            'sukar',
+            'lambat',
+            'delay',
+            'bad',
+            'poor',
+            'confusing',
+            'hard',
+            'difficult',
+            'slow',
+            'worst',
+            'tidak puas',
+            'tak puas',
         ];
         $stopwords = [
-            'dan', 'yang', 'untuk', 'pada', 'dengan', 'ini', 'itu', 'adalah', 'saya', 'kami', 'kita',
-            'the', 'a', 'an', 'to', 'of', 'in', 'is', 'are', 'was', 'were', 'be', 'been', 'this',
-            'that', 'for', 'with', 'it', 'as', 'by', 'at', 'or', 'from', 'so', 'very', 'lebih',
-            'kurang', 'boleh', 'tidak', 'tak', 'pun', 'lah',
+            'dan',
+            'yang',
+            'untuk',
+            'pada',
+            'dengan',
+            'ini',
+            'itu',
+            'adalah',
+            'saya',
+            'kami',
+            'kita',
+            'the',
+            'a',
+            'an',
+            'to',
+            'of',
+            'in',
+            'is',
+            'are',
+            'was',
+            'were',
+            'be',
+            'been',
+            'this',
+            'that',
+            'for',
+            'with',
+            'it',
+            'as',
+            'by',
+            'at',
+            'or',
+            'from',
+            'so',
+            'very',
+            'lebih',
+            'kurang',
+            'boleh',
+            'tidak',
+            'tak',
+            'pun',
+            'lah',
         ];
 
         $sentimentCounts = [
