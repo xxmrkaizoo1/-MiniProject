@@ -15,10 +15,30 @@
 <body class="font-sans text-gray-900 bg-slate-50">
     <div class="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
         <div class="mx-auto flex max-w-6xl flex-col gap-8">
-            <div class="flex flex-col gap-3 text-center sm:text-left">
-                <p class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Feedback Overview</p>
-                <h1 class="text-3xl font-bold text-slate-900 sm:text-4xl">Admin Feedback List</h1>
-                <p class="text-base text-slate-600">Review submissions, filter by subject, and track average ratings.</p>
+            <div class="flex flex-col gap-4 text-center sm:text-left">
+                <div>
+                    <p class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Feedback Overview</p>
+                    <h1 class="text-3xl font-bold text-slate-900 sm:text-4xl">Admin Feedback List</h1>
+                    <p class="text-base text-slate-600">Review submissions, filter by subject, and track average ratings.</p>
+                </div>
+                <div class="flex flex-wrap items-center justify-center gap-3 sm:justify-start">
+                    <a href="/admin/feedback"
+                        class="inline-flex items-center rounded-full bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                        Feedback
+                    </a>
+                    <a href="{{ route('admin.subjects.index') }}"
+                        class="inline-flex items-center rounded-full bg-sky-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-sky-200">
+                        Subjects
+                    </a>
+                    <a href="{{ route('admin.classrooms.index') }}"
+                        class="inline-flex items-center rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-200">
+                        Classes
+                    </a>
+                    <a href="/feedback"
+                        class="inline-flex items-center rounded-full bg-slate-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-200">
+                        Back to Form
+                    </a>
+                </div>
             </div>
 
             <div class="grid gap-6 lg:grid-cols-3">
@@ -61,9 +81,17 @@
             </div>
 
             <div class="overflow-hidden rounded-2xl bg-white shadow-lg ring-1 ring-slate-200">
-                <div class="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-6 py-4">
                     <h2 class="text-lg font-semibold text-slate-900">Latest Feedback</h2>
-                    <a href="/feedback" class="text-sm font-semibold text-indigo-600 hover:text-indigo-500">Back to Form</a>
+                    <div class="flex flex-wrap gap-2">
+                        <a href="{{ route('admin.subjects.index') }}"
+                            class="inline-flex items-center rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700 hover:bg-sky-100">Subjects</a>
+                        <a href="{{ route('admin.classrooms.index') }}"
+                            class="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-100">Classes</a>
+                        <a href="/feedback"
+                            class="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-100">Back
+                            to Form</a>
+                    </div>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
@@ -81,7 +109,8 @@
                                 <tr class="text-slate-700">
                                     <td class="whitespace-nowrap px-6 py-4 font-medium text-slate-900">{{ $f->subject }}</td>
                                     <td class="px-6 py-4">
-                                        <span class="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700">
+                                        <span
+                                            class="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700">
                                             {{ $f->rating }} / 5
                                         </span>
                                     </td>

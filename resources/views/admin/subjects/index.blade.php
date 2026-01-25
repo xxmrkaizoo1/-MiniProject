@@ -8,6 +8,21 @@
 <body>
     <h2>Subjects</h2>
 
+ <div style="margin: 16px 0;">
+        <strong>Admin Actions:</strong><br>
+        <a href="/admin/feedback"
+            style="display:inline-block;margin:6px 6px 0 0;padding:8px 12px;background:#4f46e5;color:#fff;border-radius:6px;text-decoration:none;">Feedback</a>
+        <a href="{{ route('admin.subjects.index') }}"
+            style="display:inline-block;margin:6px 6px 0 0;padding:8px 12px;background:#0ea5e9;color:#fff;border-radius:6px;text-decoration:none;">Subjects</a>
+        <a href="{{ route('admin.classrooms.index') }}"
+            style="display:inline-block;margin:6px 6px 0 0;padding:8px 12px;background:#10b981;color:#fff;border-radius:6px;text-decoration:none;">Classes</a>
+        <a href="/feedback"
+            style="display:inline-block;margin:6px 6px 0 0;padding:8px 12px;background:#6b7280;color:#fff;border-radius:6px;text-decoration:none;">Back
+            to Form</a>
+    </div>
+
+
+
     @if (session('success'))
         <p style="color:green;">{{ session('success') }}</p>
     @endif
