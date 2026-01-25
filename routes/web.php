@@ -13,12 +13,12 @@ Route::get('/', function () {
 
 
 Route::middleware(['auth', 'role:student'])->group(function () {
-    Route::get('/feedback', [FeedbackController::class, 'create']);
-    Route::post('/feedback', [FeedbackController::class, 'store']);
+    Route::get('/feedback', [FeedbackController::class, 'create'])->name('feedback.create');
+    Route::post('/feedback', [FeedbackController::class, 'store'])->name('feedback.store');
 });
 
 Route::middleware(['auth', 'admin'])->group(function () {
-    Route::get('/admin/feedback', [FeedbackController::class, 'index']);
+    Route::get('/admin/feedback', [FeedbackController::class, 'index'])->name('admin.feedback.index');
     Route::get('/admin/feedback/export/{format}', [FeedbackController::class, 'export'])
         ->name('admin.feedback.export');
     Route::get('/admin/subjects', [SubjectController::class, 'index'])->name('admin.subjects.index');

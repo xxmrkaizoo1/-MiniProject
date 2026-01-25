@@ -89,4 +89,22 @@ class User extends Authenticatable
 
         return in_array($resolvedRole, $roleList, true);
     }
+
+    public function landingRouteName(): string
+    {
+        if ($this->isAdmin()) {
+            return 'admin.feedback.index';
+        }
+
+        if ($this->isLecturer()) {
+            return 'dashboard';
+        }
+
+        return 'feedback.create';
+    }
+
+    public function landingUrl(): string
+    {
+        return route($this->landingRouteName(), absolute: false);
+    }
 }
