@@ -3,6 +3,8 @@
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\FeedbackController;
+use App\Http\Controllers\SubjectController;
+use App\Http\Controllers\ClassroomController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -14,6 +16,12 @@ Route::post('/feedback', [FeedbackController::class, 'store']);
 
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/feedback', [FeedbackController::class, 'index']);
+    Route::get('/admin/subjects', [SubjectController::class, 'index'])->name('admin.subjects.index');
+    Route::post('/admin/subjects', [SubjectController::class, 'store'])->name('admin.subjects.store');
+    Route::get('/admin/classes', [ClassroomController::class, 'index'])->name('admin.classrooms.index');
+    Route::post('/admin/classes', [ClassroomController::class, 'store'])->name('admin.classrooms.store');
+    Route::post('/admin/classes/enrollments', [ClassroomController::class, 'storeEnrollment'])
+        ->name('admin.classrooms.enrollments.store');
 });
 
 
