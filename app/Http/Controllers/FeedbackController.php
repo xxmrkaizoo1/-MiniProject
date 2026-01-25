@@ -33,9 +33,12 @@ class FeedbackController extends Controller
             'mood_rating' => $validated['mood_rating'],
             'comments' => $validated['comments'] ?? null,
             'is_anonymous' => $request->has('is_anonymous'),
+            'user_id' => auth()->id(),
         ]);
+
         return redirect('/feedback')->with('success', 'Feedback submitted!');
     }
+
     public function index(Request $request)
     {
         $subject = $request->query('subject');
@@ -232,8 +235,8 @@ class FeedbackController extends Controller
 
     private function extractKeywords(string $comment, array $stopwords): array
     {
-        $clean = preg_replace('/[^\\pL\\pN\\s]+/u', ' ', $comment);
-        $tokens = preg_split('/\\s+/', Str::lower($clean), -1, PREG_SPLIT_NO_EMPTY);
+        $clean = preg_replace('/[^\pL\pN\s]+/u', ' ', $comment);
+        $tokens = preg_split('/\s+/', Str::lower($clean), -1, PREG_SPLIT_NO_EMPTY);
         $filtered = [];
 
         foreach ($tokens as $token) {

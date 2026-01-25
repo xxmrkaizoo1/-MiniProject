@@ -93,7 +93,7 @@
                             class="mt-1 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
                         <div>
                             <label for="is_anonymous" class="text-sm font-medium text-slate-700">Submit as anonymous</label>
-                            <p class="text-xs text-slate-500">We will not store your personal details with this feedback.</p>
+                            <p class="text-xs text-slate-500">We store your user ID for audit purposes, but it remains hidden in admin views.</p>
                         </div>
                     </div>
 
