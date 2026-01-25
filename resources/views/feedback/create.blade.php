@@ -1,53 +1,94 @@
 <!doctype html>
-<html>
+<html lang="en">
 
 <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Submit Feedback</title>
+
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body>
-    <h2>Student Feedback Form</h2>
+<body class="font-sans text-gray-900 bg-slate-50">
+    <div class="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+        <div class="mx-auto max-w-3xl">
+            <div class="mb-8 text-center">
+                <p class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Student Voice</p>
+                <h1 class="mt-2 text-3xl font-bold text-slate-900 sm:text-4xl">Student Feedback Form</h1>
+                <p class="mt-3 text-base text-slate-600">Share your thoughts so we can keep improving your learning experience.</p>
+            </div>
 
-    @if (session('success'))
-        <p style="color:green;">{{ session('success') }}</p>
-    @endif
+            <div class="rounded-2xl bg-white p-6 shadow-lg ring-1 ring-slate-200 sm:p-10">
+                @if (session('success'))
+                    <div class="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                        {{ session('success') }}
+                    </div>
+                @endif
 
-    @if ($errors->any())
-        <ul style="color:red;">
-            @foreach ($errors->all() as $e)
-                <li>{{ $e }}</li>
-            @endforeach
-        </ul>
-    @endif
+                @if ($errors->any())
+                    <div class="mb-6 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                        <p class="font-semibold">Please fix the following:</p>
+                        <ul class="mt-2 list-disc space-y-1 pl-5">
+                            @foreach ($errors->all() as $e)
+                                <li>{{ $e }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
 
-    <form method="POST" action="/feedback">
-        @csrf
+                <form method="POST" action="/feedback" class="space-y-6">
+                    @csrf
 
-        <label>Subject</label><br>
-        <input type="text" name="subject" value="{{ old('subject') }}" required><br><br>
+                    <div>
+                        <label for="subject" class="block text-sm font-medium text-slate-700">Subject</label>
+                        <input id="subject" type="text" name="subject" value="{{ old('subject') }}" required
+                            class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200">
+                    </div>
 
-        <label>Rating (1-5)</label><br>
-        <input type="number" name="rating" min="1" max="5" value="{{ old('rating') }}" required><br><br>
+                    <div>
+                        <label for="rating" class="block text-sm font-medium text-slate-700">Rating (1-5)</label>
+                        <input id="rating" type="number" name="rating" min="1" max="5" value="{{ old('rating') }}" required
+                            class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200">
+                    </div>
 
-        <label>Comment</label><br>
-        <textarea name="comments" rows="4">{{ old('comments') }}</textarea><br><br>
-        <label>
-            <input type="checkbox" name="is_anonymous" value="1">
-            Submit as anonymous
-        </label><br><br>
+                    <div>
+                        <label for="comments" class="block text-sm font-medium text-slate-700">Comment</label>
+                        <textarea id="comments" name="comments" rows="5"
+                            class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200">{{ old('comments') }}</textarea>
+                    </div>
 
+                    <div class="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                        <input id="is_anonymous" type="checkbox" name="is_anonymous" value="1"
+                            class="mt-1 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                        <div>
+                            <label for="is_anonymous" class="text-sm font-medium text-slate-700">Submit as anonymous</label>
+                            <p class="text-xs text-slate-500">We will not store your personal details with this feedback.</p>
+                        </div>
+                    </div>
 
-
-
-        <button type="submit">Send</button>
-
-
-
-
-    </form>
-
-    <p><a href="/admin/feedback">View Admin Page</a></p>
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <button type="submit"
+                            class="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                            Send Feedback
+                        </button>
+                        <div class="flex flex-col gap-2 text-sm font-semibold sm:flex-row sm:items-center sm:gap-4">
+                            <a href="{{ url('/dashboard') }}"
+                                class="text-slate-600 transition hover:text-slate-500">
+                                Back to Dashboard
+                            </a>
+                            <a href="/admin/feedback"
+                                class="text-indigo-600 transition hover:text-indigo-500">
+                                View Admin Page
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>
-

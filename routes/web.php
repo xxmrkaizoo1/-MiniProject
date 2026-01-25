@@ -16,12 +16,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/feedback', [FeedbackController::class, 'index']);
 });
 
-
-
-
-
-
-
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
