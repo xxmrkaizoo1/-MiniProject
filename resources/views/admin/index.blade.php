@@ -19,7 +19,8 @@
                 <div>
                     <p class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Feedback Overview</p>
                     <h1 class="text-3xl font-bold text-slate-900 sm:text-4xl">Admin Feedback List</h1>
-                    <p class="text-base text-slate-600">Review submissions, filter by subject, and track average ratings.</p>
+                    <p class="text-base text-slate-600">Review submissions, filter by subject, and track average
+                        ratings.</p>
                 </div>
                 <div class="flex flex-wrap items-center justify-center gap-3 sm:justify-start">
                     <a href="/admin/feedback"
@@ -80,6 +81,50 @@
                 </div>
             </div>
 
+            <div class="rounded-2xl bg-white p-6 shadow-lg ring-1 ring-slate-200">
+                <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <h2 class="text-lg font-semibold text-slate-900">Export Laporan</h2>
+                        <p class="mt-1 text-sm text-slate-500">Muat turun laporan mingguan atau bulanan dalam PDF atau
+                            Excel (CSV).</p>
+                    </div>
+                    <form method="GET" class="flex flex-wrap items-end gap-3">
+                        <div>
+                            <label for="export-period"
+                                class="block text-xs font-semibold uppercase tracking-wide text-slate-500">Tempoh</label>
+                            <select id="export-period" name="period"
+                                class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200">
+                                <option value="weekly">Mingguan</option>
+                                <option value="monthly">Bulanan</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="export-subject"
+                                class="block text-xs font-semibold uppercase tracking-wide text-slate-500">Subjek</label>
+                            <select id="export-subject" name="subject"
+                                class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200">
+                                <option value="">Semua Subjek</option>
+                                @foreach ($subjects as $s)
+                                    <option value="{{ $s }}">{{ $s }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <button type="submit"
+                                formaction="{{ route('admin.feedback.export', ['format' => 'pdf']) }}"
+                                class="inline-flex items-center rounded-full bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                                Download PDF
+                            </button>
+                            <button type="submit"
+                                formaction="{{ route('admin.feedback.export', ['format' => 'excel']) }}"
+                                class="inline-flex items-center rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-200">
+                                Download Excel (CSV)
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
             <div class="overflow-hidden rounded-2xl bg-white shadow-lg ring-1 ring-slate-200">
                 @php
                     $moodEmojis = [1 => '😞', 2 => '😕', 3 => '😐', 4 => '🙂', 5 => '😄'];
@@ -111,7 +156,8 @@
                         <tbody class="divide-y divide-slate-100">
                             @forelse ($feedbacks as $f)
                                 <tr class="text-slate-700">
-                                    <td class="whitespace-nowrap px-6 py-4 font-medium text-slate-900">{{ $f->subject }}</td>
+                                    <td class="whitespace-nowrap px-6 py-4 font-medium text-slate-900">
+                                        {{ $f->subject }}</td>
                                     <td class="px-6 py-4">
                                         <span
                                             class="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700">
@@ -119,7 +165,8 @@
                                         </span>
                                     </td>
                                     <td class="px-6 py-4">
-                                        <span class="inline-flex items-center gap-2 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
+                                        <span
+                                            class="inline-flex items-center gap-2 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
                                             <span class="text-base">{{ $moodEmojis[$f->mood_rating] ?? '😐' }}</span>
                                             {{ $f->mood_rating ?? 3 }} / 5
                                         </span>

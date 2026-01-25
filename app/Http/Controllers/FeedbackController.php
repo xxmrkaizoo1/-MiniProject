@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Feedback;
 use App\Models\Subject;
 use App\Http\Controllers\Controller;
+use Carbon\Carbon;
 use Illuminate\Support\Str;
 
 class FeedbackController extends Controller
@@ -57,6 +58,70 @@ class FeedbackController extends Controller
         $analysis = $this->buildAiAnalysis($feedbacks, $avgRating);
 
         return view('admin.index', compact('feedbacks', 'avgRating', 'subjects', 'subject', 'analysis'));
+    }
+
+    public function export(Request $request, string $format)
+    {
+        $format = Str::lower($format);
+
+        if (! in_array($format, ['pdf', 'excel'], true)) {
+            abort(404);
+        }
+
+        $period = $request->query('period', 'weekly');
+        $subject = $request->query('subject');
+
+        $startDate = match ($period) {
+            'monthly' => Carbon::now()->subMonth(),
+            default => Carbon::now()->subDays(7),
+        };
+
+        $query = Feedback::query()->where('created_at', '>=', $startDate);
+
+        if ($subject) {
+            $query->where('subject', $subject);
+        }
+
+        $feedbacks = $query->latest()->get();
+        $avgRating = $feedbacks->avg('rating');
+        $periodLabel = $period === 'monthly' ? 'Bulanan' : 'Mingguan';
+        $subjectLabel = $subject ?: 'Semua Subjek';
+        $timestamp = Carbon::now()->format('Ymd_His');
+
+        if ($format === 'pdf') {
+            $pdf = app('dompdf.wrapper');
+            $pdf->loadView('admin.feedback.report', [
+                'feedbacks' => $feedbacks,
+                'avgRating' => $avgRating,
+                'periodLabel' => $periodLabel,
+                'subjectLabel' => $subjectLabel,
+                'startDate' => $startDate,
+            ]);
+
+            return $pdf->download("laporan_feedback_{$period}_{$timestamp}.pdf");
+        }
+
+        $filename = "laporan_feedback_{$period}_{$timestamp}.csv";
+
+        return response()->streamDownload(function () use ($feedbacks) {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, ['Subject', 'Rating', 'Mood', 'Comment', 'Anonymous', 'Date']);
+
+            foreach ($feedbacks as $feedback) {
+                fputcsv($handle, [
+                    $feedback->subject,
+                    $feedback->rating,
+                    $feedback->mood_rating,
+                    $feedback->comments,
+                    $feedback->is_anonymous ? 'Yes' : 'No',
+                    optional($feedback->created_at)->format('Y-m-d H:i:s'),
+                ]);
+            }
+
+            fclose($handle);
+        }, $filename, [
+            'Content-Type' => 'text/csv',
+        ]);
     }
 
     private function buildAiAnalysis($feedbacks, $avgRating): array

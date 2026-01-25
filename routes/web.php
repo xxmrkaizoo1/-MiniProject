@@ -18,6 +18,8 @@ Route::post('/feedback', [FeedbackController::class, 'store']);
 
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/feedback', [FeedbackController::class, 'index']);
+    Route::get('/admin/feedback/export/{format}', [FeedbackController::class, 'export'])
+        ->name('admin.feedback.export');
     Route::get('/admin/subjects', [SubjectController::class, 'index'])->name('admin.subjects.index');
     Route::post('/admin/subjects', [SubjectController::class, 'store'])->name('admin.subjects.store');
     Route::get('/admin/classes', [ClassroomController::class, 'index'])->name('admin.classrooms.index');
