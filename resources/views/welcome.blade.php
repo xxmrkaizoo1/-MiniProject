@@ -13,24 +13,43 @@
         <h1 class="text-2xl font-bold mb-4">feedback</h1>
         <p class="text-gray-600 mb-6">Welcome</p>
 
-        <div class="flex gap-3 justify-center">
+        <div class="flex flex-wrap justify-center gap-3">
             @auth
                 @if (Auth::user()->isLecturer())
                     <a href="{{ url('/dashboard') }}"
                        class="px-4 py-2 rounded bg-black text-white">
                         Dashboard
                     </a>
+                    <a href="{{ route('profile.edit') }}"
+                       class="px-4 py-2 rounded border border-black">
+                        Profile
+                    </a>
                 @elseif (Auth::user()->isStudent())
                     <a href="{{ url('/feedback') }}"
                        class="px-4 py-2 rounded bg-black text-white">
                         Submit Feedback
+                    </a>
+                    <a href="{{ route('profile.edit') }}"
+                       class="px-4 py-2 rounded border border-black">
+                        Profile
                     </a>
                 @elseif (Auth::user()->isAdmin())
                     <a href="{{ url('/admin/feedback') }}"
                        class="px-4 py-2 rounded bg-black text-white">
                         Admin Panel
                     </a>
+                    <a href="{{ route('profile.edit') }}"
+                       class="px-4 py-2 rounded border border-black">
+                        Profile
+                    </a>
                 @endif
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit"
+                       class="px-4 py-2 rounded border border-rose-500 text-rose-600">
+                        Logout
+                    </button>
+                </form>
             @else
                 <a href="{{ route('login') }}"
                    class="px-4 py-2 rounded bg-black text-white">
