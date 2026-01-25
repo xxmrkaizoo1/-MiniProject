@@ -17,6 +17,23 @@
                         </a>
                     </div>
 
+                    @if ($notification)
+                        <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-900 shadow-sm dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-100">
+                            <div class="flex flex-wrap items-center justify-between gap-3">
+                                <div>
+                                    <p class="text-sm font-semibold uppercase tracking-wide">{{ $notification['title'] }}</p>
+                                    <p class="mt-1 text-sm text-amber-800 dark:text-amber-100">
+                                        {{ $notification['message'] }}
+                                    </p>
+                                </div>
+                                <div class="text-sm text-amber-700 dark:text-amber-200">
+                                    <p>Rating rendah: {{ $avgRating ? number_format($avgRating, 2) : '0.00' }}/5</p>
+                                    <p>{{ $negativeCount }} daripada {{ $totalFeedback }} komen negatif ({{ $negativeRatio }}%)</p>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
                     <section class="space-y-6">
                         <div>
                             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Smart Classroom Insights</h3>
