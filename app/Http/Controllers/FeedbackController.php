@@ -22,6 +22,7 @@ class FeedbackController extends Controller
         $validated = $request->validate([
             'subject' => 'required|string|exists:subjects,name',
             'rating'  => 'required|integer|min:1|max:5',
+            'mood_rating' => 'required|integer|min:1|max:5',
             'comments' => 'nullable|string|max:1000',
             'is_anonymous' => 'nullable|boolean',
         ]);
@@ -29,6 +30,7 @@ class FeedbackController extends Controller
         Feedback::create([
             'subject' => $validated['subject'],
             'rating' => $validated['rating'],
+            'mood_rating' => $validated['mood_rating'],
             'comments' => $validated['comments'] ?? null,
             'is_anonymous' => $request->has('is_anonymous'),
         ]);
