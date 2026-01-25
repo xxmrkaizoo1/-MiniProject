@@ -10,11 +10,24 @@
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100 space-y-8">
                     <div class="space-y-4">
-                        <p>{{ __("You're logged in!") }}</p>
-                        <a href="{{ url('/feedback') }}"
-                            class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:focus:ring-indigo-500">
-                            <span>Give Feedback</span>
-                        </a>
+                        <p class="text-sm text-gray-600 dark:text-gray-300">Ringkasan prestasi untuk kelas yang anda kendalikan.</p>
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-200">
+                            <p class="font-semibold text-slate-900 dark:text-white">Senarai kelas anda</p>
+                            @if ($classrooms->isEmpty())
+                                <p class="mt-2 text-xs text-rose-600">Tiada kelas ditetapkan buat masa ini.</p>
+                            @else
+                                <ul class="mt-3 space-y-2">
+                                    @foreach ($classrooms as $classroom)
+                                        <li class="flex flex-wrap items-center justify-between gap-2 text-sm">
+                                            <span class="font-medium text-slate-800 dark:text-slate-100">{{ $classroom->name }}</span>
+                                            <span class="text-xs text-slate-500 dark:text-slate-400">
+                                                {{ $classroom->subject?->name ?? 'Subjek belum ditetapkan' }} · {{ $classroom->enrollments_count }} pelajar
+                                            </span>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            @endif
+                        </div>
                     </div>
 
                     @if ($notification)

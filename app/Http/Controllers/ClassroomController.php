@@ -16,8 +16,8 @@ class ClassroomController extends Controller
             ->orderBy('name')
             ->get();
         $subjects = Subject::orderBy('code')->get();
-        $lecturers = User::where('is_admin', 0)->orderBy('name')->get();
-        $students = User::where('is_admin', 0)->orderBy('name')->get();
+        $lecturers = User::where('role', User::ROLE_LECTURER)->orderBy('name')->get();
+        $students = User::where('role', User::ROLE_STUDENT)->orderBy('name')->get();
 
         return view('admin.classrooms.index', compact('classrooms', 'subjects', 'lecturers', 'students'));
     }
@@ -32,6 +32,11 @@ class ClassroomController extends Controller
 
         Classroom::create($validated);
 
+        if (! empty($validated['lecturer_id'])) {
+            User::whereKey($validated['lecturer_id'])
+                ->update(['role' => User::ROLE_LECTURER]);
+        }
+
         return redirect()->route('admin.classrooms.index')
             ->with('success', 'Class created.');
     }
@@ -44,6 +49,10 @@ class ClassroomController extends Controller
         ]);
 
         ClassroomEnrollment::firstOrCreate($validated);
+
+        User::whereKey($validated['student_id'])
+            ->where('role', '!=', User::ROLE_ADMIN)
+            ->update(['role' => User::ROLE_STUDENT]);
 
         return redirect()->route('admin.classrooms.index')
             ->with('success', 'Student assigned to class.');

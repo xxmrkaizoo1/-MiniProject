@@ -8,20 +8,32 @@ use App\Models\Subject;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class FeedbackController extends Controller
 {
     public function create()
     {
-        $subjects = Subject::orderBy('name')->get();
+        $user = auth()->user();
+        $subjects = Subject::whereHas('classrooms.enrollments', function ($query) use ($user) {
+            $query->where('student_id', $user->id);
+        })
+            ->orderBy('name')
+            ->get();
 
         return view('feedback.create', compact('subjects'));
     }
 
     public function store(Request $request)
     {
+        $user = auth()->user();
+        $allowedSubjects = Subject::whereHas('classrooms.enrollments', function ($query) use ($user) {
+            $query->where('student_id', $user->id);
+        })
+            ->pluck('name');
+
         $validated = $request->validate([
-            'subject' => 'required|string|exists:subjects,name',
+            'subject' => ['required', 'string', Rule::in($allowedSubjects->all())],
             'rating'  => 'required|integer|min:1|max:5',
             'mood_rating' => 'required|integer|min:1|max:5',
             'comments' => 'nullable|string|max:1000',

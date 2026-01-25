@@ -5,16 +5,17 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\ClassroomController;
-use App\Models\Feedback;
-use Illuminate\Support\Str;
+use App\Http\Controllers\LecturerDashboardController;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
 
-Route::get('/feedback', [FeedbackController::class, 'create']);
-Route::post('/feedback', [FeedbackController::class, 'store']);
+Route::middleware(['auth', 'role:student'])->group(function () {
+    Route::get('/feedback', [FeedbackController::class, 'create']);
+    Route::post('/feedback', [FeedbackController::class, 'store']);
+});
 
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/feedback', [FeedbackController::class, 'index']);
@@ -28,76 +29,9 @@ Route::middleware(['auth', 'admin'])->group(function () {
         ->name('admin.classrooms.enrollments.store');
 });
 
-Route::get('/dashboard', function () {
-    $feedbacks = Feedback::query()->get(['rating', 'comments']);
-    $avgRating = $feedbacks->avg('rating');
-    $totalFeedback = max($feedbacks->count(), 1);
-
-    $negativeKeywords = [
-        'teruk',
-        'buruk',
-        'lemah',
-        'bosan',
-        'mengelirukan',
-        'sukar',
-        'lambat',
-        'delay',
-        'bad',
-        'poor',
-        'confusing',
-        'hard',
-        'difficult',
-        'slow',
-        'worst',
-        'tidak puas',
-        'tak puas',
-    ];
-
-    $negativeCount = 0;
-
-    foreach ($feedbacks as $feedback) {
-        $isNegative = $feedback->rating < 3;
-        $comment = Str::lower(trim((string) $feedback->comments));
-
-        if (! $isNegative && $comment !== '') {
-            foreach ($negativeKeywords as $keyword) {
-                if ($keyword !== '' && Str::contains($comment, $keyword)) {
-                    $isNegative = true;
-                    break;
-                }
-            }
-        }
-
-        if ($isNegative) {
-            $negativeCount++;
-        }
-    }
-
-    $negativeRatio = round(($negativeCount / $totalFeedback) * 100);
-    $hasLowRating = $avgRating !== null && $avgRating < 3;
-    $hasNegativeSpike = $negativeCount >= 3 && $negativeRatio >= 30;
-
-    $notification = null;
-
-    if ($hasLowRating || $hasNegativeSpike) {
-        $notification = [
-            'title' => 'Notifikasi Pensyarah',
-            'message' => sprintf(
-                'Perhatian: purata rating %s/5 dengan %s%% komen negatif. Sila semak isu utama kelas.',
-                $avgRating ? number_format($avgRating, 2) : '0.00',
-                $negativeRatio
-            ),
-        ];
-    }
-
-    return view('dashboard', [
-        'notification' => $notification,
-        'avgRating' => $avgRating,
-        'negativeRatio' => $negativeRatio,
-        'negativeCount' => $negativeCount,
-        'totalFeedback' => $feedbacks->count(),
-    ]);
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [LecturerDashboardController::class, 'index'])
+    ->middleware(['auth', 'verified', 'role:lecturer'])
+    ->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

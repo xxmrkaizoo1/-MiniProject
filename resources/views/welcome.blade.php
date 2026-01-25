@@ -15,10 +15,22 @@
 
         <div class="flex gap-3 justify-center">
             @auth
-                <a href="{{ url('/dashboard') }}"
-                   class="px-4 py-2 rounded bg-black text-white">
-                    Dashboard
-                </a>
+                @if (Auth::user()->isLecturer())
+                    <a href="{{ url('/dashboard') }}"
+                       class="px-4 py-2 rounded bg-black text-white">
+                        Dashboard
+                    </a>
+                @elseif (Auth::user()->isStudent())
+                    <a href="{{ url('/feedback') }}"
+                       class="px-4 py-2 rounded bg-black text-white">
+                        Submit Feedback
+                    </a>
+                @elseif (Auth::user()->isAdmin())
+                    <a href="{{ url('/admin/feedback') }}"
+                       class="px-4 py-2 rounded bg-black text-white">
+                        Admin Panel
+                    </a>
+                @endif
             @else
                 <a href="{{ route('login') }}"
                    class="px-4 py-2 rounded bg-black text-white">
