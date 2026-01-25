@@ -4,20 +4,22 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Feedback;
+use App\Models\Subject;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\DB;
 
 class FeedbackController extends Controller
 {
     public function create()
     {
-        return view('feedback.create');
+        $subjects = Subject::orderBy('name')->get();
+
+        return view('feedback.create', compact('subjects'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'subject' => 'required|string|max:100',
+            'subject' => 'required|string|exists:subjects,name',
             'rating'  => 'required|integer|min:1|max:5',
             'comments' => 'nullable|string|max:1000',
             'is_anonymous' => 'nullable|boolean',
@@ -49,7 +51,7 @@ class FeedbackController extends Controller
         $feedbacks = \App\Models\Feedback::latest()->get();
         $avgRating = (clone $query)->avg('rating');
 
-        $subjects = Feedback::select('subject')->distinct()->pluck('subject');
+        $subjects = Subject::orderBy('name')->pluck('name');
 
         return view('admin.index', compact('feedbacks', 'avgRating', 'subjects', 'subject'));
     }

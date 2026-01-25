@@ -44,8 +44,18 @@
 
                     <div>
                         <label for="subject" class="block text-sm font-medium text-slate-700">Subject</label>
-                        <input id="subject" type="text" name="subject" value="{{ old('subject') }}" required
+                        <select id="subject" name="subject" required {{ $subjects->isEmpty() ? 'disabled' : '' }}
                             class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200">
+                            <option value="">Select a subject</option>
+                            @foreach ($subjects as $subject)
+                                <option value="{{ $subject->name }}" {{ old('subject') === $subject->name ? 'selected' : '' }}>
+                                    {{ $subject->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @if ($subjects->isEmpty())
+                            <p class="mt-2 text-xs text-rose-600">No subjects available. Please ask the admin to add subjects.</p>
+                        @endif
                     </div>
 
                     <div>
@@ -92,11 +102,3 @@
 </body>
 
 </html>
-
-
-
-
-
-
-
-
