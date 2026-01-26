@@ -22,6 +22,21 @@
                     <p class="text-base text-slate-600">Review submissions, filter by subject, and track average
                         ratings.</p>
                 </div>
+                @if (session('success'))
+                    <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                        {{ session('success') }}
+                    </div>
+                @endif
+                @if ($errors->any())
+                    <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                        <p class="font-semibold">Please fix the following:</p>
+                        <ul class="mt-2 list-disc space-y-1 pl-5">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
                 <div class="flex flex-wrap items-center justify-center gap-3 sm:justify-start">
                     <a href="/admin/feedback"
                         class="inline-flex items-center rounded-full bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300">
@@ -238,3 +253,23 @@
                 checkboxes.forEach((checkbox) => {
                     checkbox.checked = event.target.checked;
                 });
+                updateDeleteState();
+            });
+        }
+
+        checkboxes.forEach((checkbox) => {
+            checkbox.addEventListener('change', () => {
+                if (!checkbox.checked && selectAll) {
+                    selectAll.checked = false;
+                } else if (selectAll) {
+                    selectAll.checked = Array.from(checkboxes).every((item) => item.checked);
+                }
+                updateDeleteState();
+            });
+        });
+
+        updateDeleteState();
+    </script>
+</body>
+
+</html>
