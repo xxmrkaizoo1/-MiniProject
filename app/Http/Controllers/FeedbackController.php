@@ -15,14 +15,16 @@ class FeedbackController extends Controller
     public function create()
     {
         $user = auth()->user();
-        $subjects = Subject::whereHas('classrooms.enrollments', function ($query) use ($user) {
-            $query->where('student_id', $user->id);
-        })
-            ->orderBy('name')
-            ->get();
         $enrollmentCount = $user
             ? $user->classroomEnrollments()->count()
             : 0;
+        $subjects = $enrollmentCount > 0
+            ? Subject::whereHas('classrooms.enrollments', function ($query) use ($user) {
+                $query->where('student_id', $user->id);
+            })
+                ->orderBy('name')
+                ->get()
+            : Subject::orderBy('name')->get();
 
         return view('feedback.create', compact('subjects', 'enrollmentCount'));
     }
@@ -30,10 +32,15 @@ class FeedbackController extends Controller
     public function store(Request $request)
     {
         $user = auth()->user();
-        $allowedSubjects = Subject::whereHas('classrooms.enrollments', function ($query) use ($user) {
-            $query->where('student_id', $user->id);
-        })
-            ->pluck('name');
+        $enrollmentCount = $user
+            ? $user->classroomEnrollments()->count()
+            : 0;
+        $allowedSubjects = $enrollmentCount > 0
+            ? Subject::whereHas('classrooms.enrollments', function ($query) use ($user) {
+                $query->where('student_id', $user->id);
+            })
+                ->pluck('name')
+            : Subject::orderBy('name')->pluck('name');
 
         $validated = $request->validate([
             'subject' => ['required', 'string', Rule::in($allowedSubjects->all())],

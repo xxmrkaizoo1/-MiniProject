@@ -53,12 +53,14 @@
                                 </option>
                             @endforeach
                         </select>
-                        @if ($subjects->isEmpty())
-                            @if ($enrollmentCount === 0)
-                                <p class="mt-2 text-xs text-rose-600">You are not enrolled in any class yet. Please contact your lecturer or admin.</p>
+                        @if ($enrollmentCount === 0)
+                            @if ($subjects->isEmpty())
+                                <p class="mt-2 text-xs text-rose-600">No subjects are available yet. Please contact your lecturer or admin.</p>
                             @else
-                                <p class="mt-2 text-xs text-rose-600">No subjects assigned to your class yet. Please contact your lecturer or admin.</p>
+                                <p class="mt-2 text-xs text-amber-600">You are not enrolled in any class yet. Showing all subjects for now.</p>
                             @endif
+                        @elseif ($subjects->isEmpty())
+                            <p class="mt-2 text-xs text-rose-600">No subjects assigned to your class yet. Please contact your lecturer or admin.</p>
                         @endif
                     </div>
 
