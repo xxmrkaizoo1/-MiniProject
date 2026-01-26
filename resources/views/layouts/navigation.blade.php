@@ -3,6 +3,11 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
             <div class="flex">
+                <div class="flex shrink-0 items-center">
+                    <a href="{{ url('/') }}" class="flex items-center" aria-label="{{ config('app.name', 'Laravel') }}">
+                        {!! str_replace('<svg ', '<svg class="h-8 w-auto" ', file_get_contents(base_path('logo.svg'))) !!}
+                    </a>
+                </div>
                 <!-- Navigation Links -->
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                     @if (Auth::user()->isLecturer())

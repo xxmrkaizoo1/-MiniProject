@@ -14,6 +14,11 @@
             <div class="absolute -top-40 right-0 h-80 w-80 rounded-full bg-indigo-500/30 blur-3xl"></div>
             <div class="absolute bottom-0 left-0 h-96 w-96 rounded-full bg-sky-500/20 blur-3xl"></div>
         </div>
+        <div class="absolute left-6 top-6 z-10">
+            <a href="{{ url('/') }}" class="inline-flex items-center" aria-label="{{ config('app.name', 'Laravel') }}">
+                {!! str_replace('<svg ', '<svg class="h-10 w-auto" ', file_get_contents(base_path('logo.svg'))) !!}
+            </a>
+        </div>
 
         <div class="mx-auto flex min-h-screen max-w-6xl flex-col justify-center px-6 py-16 lg:px-10">
             <div class="grid gap-10 lg:grid-cols-[1.3fr_1fr] lg:items-center">
