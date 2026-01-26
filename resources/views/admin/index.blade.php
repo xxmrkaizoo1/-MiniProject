@@ -136,72 +136,105 @@
                 @php
                     $moodEmojis = [1 => '😞', 2 => '😕', 3 => '😐', 4 => '🙂', 5 => '😄'];
                 @endphp
-                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-6 py-4">
-                    <h2 class="text-lg font-semibold text-slate-900">Latest Feedback</h2>
-                    <div class="flex flex-wrap gap-2">
-                        <a href="{{ route('admin.subjects.index') }}"
-                            class="inline-flex items-center rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700 hover:bg-sky-100">Subjects</a>
-                        <a href="{{ route('admin.classrooms.index') }}"
-                            class="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-100">Classes</a>
-                        <a href="/feedback"
-                            class="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-100">Back
-                            to Form</a>
+                <form method="POST" action="{{ route('admin.feedback.destroySelected') }}" id="delete-feedback-form">
+                    @csrf
+                    @method('DELETE')
+                    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-6 py-4">
+                        <h2 class="text-lg font-semibold text-slate-900">Latest Feedback</h2>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button type="submit" id="delete-selected-button"
+                                class="inline-flex items-center rounded-full bg-rose-500 px-3 py-1 text-xs font-semibold text-white shadow-sm transition hover:bg-rose-600 focus:outline-none focus:ring-2 focus:ring-rose-200 disabled:cursor-not-allowed disabled:opacity-50"
+                                disabled onclick="return confirm('Delete selected feedback?')">
+                                Delete Selected
+                            </button>
+                            <a href="{{ route('admin.subjects.index') }}"
+                                class="inline-flex items-center rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700 hover:bg-sky-100">Subjects</a>
+                            <a href="{{ route('admin.classrooms.index') }}"
+                                class="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-100">Classes</a>
+                            <a href="/feedback"
+                                class="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-100">Back
+                                to Form</a>
+                        </div>
                     </div>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
-                        <thead class="bg-slate-100 text-slate-600">
-                            <tr>
-                                <th class="px-6 py-3 font-semibold">Subject</th>
-                                <th class="px-6 py-3 font-semibold">Rating</th>
-                                <th class="px-6 py-3 font-semibold">Mood</th>
-                                <th class="px-6 py-3 font-semibold">Comment</th>
-                                <th class="px-6 py-3 font-semibold">Anonymous</th>
-                                <th class="px-6 py-3 font-semibold">Date</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100">
-                            @forelse ($feedbacks as $f)
-                                <tr class="text-slate-700">
-                                    <td class="whitespace-nowrap px-6 py-4 font-medium text-slate-900">
-                                        {{ $f->subject }}</td>
-                                    <td class="px-6 py-4">
-                                        <span
-                                            class="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700">
-                                            {{ $f->rating }} / 5
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <span
-                                            class="inline-flex items-center gap-2 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
-                                            <span class="text-base">{{ $moodEmojis[$f->mood_rating] ?? '😐' }}</span>
-                                            {{ $f->mood_rating ?? 3 }} / 5
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 text-slate-600">
-                                        <p class="line-clamp-2">{{ $f->comments }}</p>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <span
-                                            class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold {{ $f->is_anonymous ? 'bg-slate-100 text-slate-700' : 'bg-emerald-50 text-emerald-700' }}">
-                                            {{ $f->is_anonymous ? 'Yes' : 'No' }}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 text-slate-500">{{ $f->created_at }}</td>
-                                </tr>
-                            @empty
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
+                            <thead class="bg-slate-100 text-slate-600">
                                 <tr>
-                                    <td colspan="6" class="px-6 py-10 text-center text-sm text-slate-500">
-                                        No feedback has been submitted yet.
-                                    </td>
+                                    <th class="px-6 py-3 font-semibold">
+                                        <label class="inline-flex items-center gap-2 text-xs font-semibold">
+                                            <input id="select-all-feedback" type="checkbox"
+                                                class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                                            Select
+                                        </label>
+                                    </th>
+                                    <th class="px-6 py-3 font-semibold">Subject</th>
+                                    <th class="px-6 py-3 font-semibold">Rating</th>
+                                    <th class="px-6 py-3 font-semibold">Mood</th>
+                                    <th class="px-6 py-3 font-semibold">Comment</th>
+                                    <th class="px-6 py-3 font-semibold">Anonymous</th>
+                                    <th class="px-6 py-3 font-semibold">Date</th>
                                 </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                @forelse ($feedbacks as $f)
+                                    <tr class="text-slate-700">
+                                        <td class="whitespace-nowrap px-6 py-4">
+                                            <input type="checkbox" name="selected_feedback[]"
+                                                value="{{ $f->id }}"
+                                                class="feedback-checkbox h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                                        </td>
+                                        <td class="whitespace-nowrap px-6 py-4 font-medium text-slate-900">
+                                            {{ $f->subject }}</td>
+                                        <td class="px-6 py-4">
+                                            <span
+                                                class="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700">
+                                                {{ $f->rating }} / 5
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span
+                                                class="inline-flex items-center gap-2 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
+                                                <span class="text-base">{{ $moodEmojis[$f->mood_rating] ?? '😐' }}</span>
+                                                {{ $f->mood_rating ?? 3 }} / 5
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 text-slate-600">
+                                            <p class="line-clamp-2">{{ $f->comments }}</p>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span
+                                                class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold {{ $f->is_anonymous ? 'bg-slate-100 text-slate-700' : 'bg-emerald-50 text-emerald-700' }}">
+                                                {{ $f->is_anonymous ? 'Yes' : 'No' }}
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 text-slate-500">{{ $f->created_at }}</td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="7" class="px-6 py-10 text-center text-sm text-slate-500">
+                                            No feedback has been submitted yet.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
-</body>
+    <script>
+        const selectAll = document.getElementById('select-all-feedback');
+        const checkboxes = document.querySelectorAll('.feedback-checkbox');
+        const deleteButton = document.getElementById('delete-selected-button');
 
-</html>
+        const updateDeleteState = () => {
+            const anyChecked = Array.from(checkboxes).some((checkbox) => checkbox.checked);
+            deleteButton.disabled = !anyChecked;
+        };
+
+        if (selectAll) {
+            selectAll.addEventListener('change', (event) => {
+                checkboxes.forEach((checkbox) => {
+                    checkbox.checked = event.target.checked;
+                });

@@ -146,6 +146,20 @@ class FeedbackController extends Controller
         ]);
     }
 
+    public function destroySelected(Request $request)
+    {
+        $validated = $request->validate([
+            'selected_feedback' => ['required', 'array'],
+            'selected_feedback.*' => ['integer', 'exists:feedback,id'],
+        ]);
+
+        Feedback::whereIn('id', $validated['selected_feedback'])->delete();
+
+        return redirect()
+            ->route('admin.feedback.index')
+            ->with('success', 'Selected feedback has been deleted.');
+    }
+
     private function buildAiAnalysis($feedbacks, $avgRating): array
     {
         $positiveKeywords = [
