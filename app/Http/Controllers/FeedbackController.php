@@ -20,8 +20,11 @@ class FeedbackController extends Controller
         })
             ->orderBy('name')
             ->get();
+        $enrollmentCount = $user
+            ? $user->classroomEnrollments()->count()
+            : 0;
 
-        return view('feedback.create', compact('subjects'));
+        return view('feedback.create', compact('subjects', 'enrollmentCount'));
     }
 
     public function store(Request $request)
