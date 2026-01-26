@@ -1,8 +1,8 @@
 # Student Voice Hub
 
-![Student Voice Hub logo](public/build/assets/logo.svg)
+!
 
-Student Voice Hub is a Laravel-based feedback portal for higher education classes. Students submit quick post-class feedback (ratings, mood checks, and optional comments), while lecturers and admins monitor trends, manage classes, and act on insights.
+Student Voice Hub is a[Student Voice Hub logo](public/assets/logo.svg) Laravel-based feedback portal for higher education classes. Students submit quick post-class feedback (ratings, mood checks, and optional comments), while lecturers and admins monitor trends, manage classes, and act on insights.
 
 ## Table of Contents
 
