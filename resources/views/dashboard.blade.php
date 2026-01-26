@@ -10,18 +10,18 @@
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100 space-y-8">
                     <div class="space-y-4">
-                        <p class="text-sm text-gray-600 dark:text-gray-300">Ringkasan prestasi untuk kelas yang anda kendalikan.</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-300">Performance summary for the classes you manage.</p>
                         <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-200">
-                            <p class="font-semibold text-slate-900 dark:text-white">Senarai kelas anda</p>
+                            <p class="font-semibold text-slate-900 dark:text-white">Your classes</p>
                             @if ($classrooms->isEmpty())
-                                <p class="mt-2 text-xs text-rose-600">Tiada kelas ditetapkan buat masa ini.</p>
+                                <p class="mt-2 text-xs text-rose-600">No classes assigned yet.</p>
                             @else
                                 <ul class="mt-3 space-y-2">
                                     @foreach ($classrooms as $classroom)
                                         <li class="flex flex-wrap items-center justify-between gap-2 text-sm">
                                             <span class="font-medium text-slate-800 dark:text-slate-100">{{ $classroom->name }}</span>
                                             <span class="text-xs text-slate-500 dark:text-slate-400">
-                                                {{ $classroom->subject?->name ?? 'Subjek belum ditetapkan' }} · {{ $classroom->enrollments_count }} pelajar
+                                                {{ $classroom->subject?->name ?? 'Subject not set' }} · {{ $classroom->enrollments_count }} students
                                             </span>
                                         </li>
                                     @endforeach
@@ -40,8 +40,8 @@
                                     </p>
                                 </div>
                                 <div class="text-sm text-amber-700 dark:text-amber-200">
-                                    <p>Rating rendah: {{ $avgRating ? number_format($avgRating, 2) : '0.00' }}/5</p>
-                                    <p>{{ $negativeCount }} daripada {{ $totalFeedback }} komen negatif ({{ $negativeRatio }}%)</p>
+                                    <p>Low rating: {{ $avgRating ? number_format($avgRating, 2) : '0.00' }}/5</p>
+                                    <p>{{ $negativeCount }} of {{ $totalFeedback }} comments are negative ({{ $negativeRatio }}%)</p>
                                 </div>
                             </div>
                         </div>
@@ -51,67 +51,85 @@
                         <div>
                             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Smart Classroom Insights</h3>
                             <p class="text-sm text-gray-600 dark:text-gray-300">
-                                Ringkasan visual untuk meningkatkan nilai Smart Classroom dari sisi rating, sentimen, dan isu utama.
+                                Visual summary to improve Smart Classroom performance across ratings, sentiment, and key issues.
                             </p>
                         </div>
 
                         <div class="grid gap-6 lg:grid-cols-3">
                             <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900">
+                                @php
+                                    $ratingMoMChangeValue = $ratingMoMChange ?? 0;
+                                    $currentMonthAverageValue = $currentMonthAverage ?? 0;
+                                    $ratingChangeLabel = ($ratingMoMChangeValue >= 0 ? '+' : '') . $ratingMoMChangeValue . '% MoM';
+                                    $ratingChangeClasses = $ratingMoMChangeValue >= 0
+                                        ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200'
+                                        : 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-200';
+                                @endphp
                                 <div class="flex items-center justify-between">
                                     <div>
-                                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Trend Rating</p>
-                                        <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">4.3 / 5</p>
+                                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Rating Trend</p>
+                                        <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                                            {{ $currentMonthAverageValue > 0 ? number_format($currentMonthAverageValue, 2) : '0.00' }} / 5
+                                        </p>
                                     </div>
-                                    <span class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200">
-                                        +8% MoM
+                                    <span class="rounded-full px-3 py-1 text-xs font-semibold {{ $ratingChangeClasses }}">
+                                        {{ $ratingChangeLabel }}
                                     </span>
                                 </div>
                                 <div class="mt-4 h-40">
-                                    <canvas id="ratingTrendChart" aria-label="Trend rating kelas pintar"></canvas>
+                                    <canvas id="ratingTrendChart" aria-label="Smart classroom rating trend"></canvas>
                                 </div>
                             </div>
 
                             <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900">
+                                @php
+                                    $weeklyPositiveRateValue = $weeklyPositiveRate ?? 0;
+                                    $sentimentStatus = $weeklyPositiveRateValue >= 70 ? 'Stable' : ($weeklyPositiveRateValue >= 50 ? 'Watch' : 'Needs attention');
+                                    $sentimentClasses = $weeklyPositiveRateValue >= 70
+                                        ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-200'
+                                        : ($weeklyPositiveRateValue >= 50
+                                            ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-200'
+                                            : 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-200');
+                                @endphp
                                 <div class="flex items-center justify-between">
                                     <div>
-                                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Sentimen Mingguan</p>
-                                        <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">72% Positif</p>
+                                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Weekly Sentiment</p>
+                                        <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">{{ $weeklyPositiveRateValue }}% Positive</p>
                                     </div>
-                                    <span class="rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-200">
-                                        Stabil
+                                    <span class="rounded-full px-3 py-1 text-xs font-semibold {{ $sentimentClasses }}">
+                                        {{ $sentimentStatus }}
                                     </span>
                                 </div>
                                 <div class="mt-4 h-40">
-                                    <canvas id="sentimentChart" aria-label="Sentimen mingguan"></canvas>
+                                    <canvas id="sentimentChart" aria-label="Weekly sentiment"></canvas>
                                 </div>
                             </div>
 
                             <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900">
+                                @php
+                                    $issueLabelsValue = collect($issueLabels ?? []);
+                                    $issueDataValue = collect($issueData ?? []);
+                                    $issueFocusCount = $issueDataValue->filter(fn ($value) => $value > 0)->count();
+                                @endphp
                                 <div class="flex items-center justify-between">
                                     <div>
-                                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Isu Utama</p>
-                                        <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">3 Fokus</p>
+                                        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Top Issues</p>
+                                        <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">{{ $issueFocusCount }} Focus Areas</p>
                                     </div>
                                     <span class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-900/40 dark:text-amber-200">
-                                        Perlu tindak
+                                        Needs follow-up
                                     </span>
                                 </div>
                                 <div class="mt-4 h-40">
-                                    <canvas id="issuesChart" aria-label="Distribusi isu utama"></canvas>
+                                    <canvas id="issuesChart" aria-label="Top issue distribution"></canvas>
                                 </div>
                                 <ul class="mt-4 space-y-2 text-sm text-gray-600 dark:text-gray-300">
-                                    <li class="flex items-center justify-between">
-                                        <span>Konektivitas Wi-Fi</span>
-                                        <span class="font-semibold text-gray-900 dark:text-gray-100">38%</span>
-                                    </li>
-                                    <li class="flex items-center justify-between">
-                                        <span>Stabilitas proyektor</span>
-                                        <span class="font-semibold text-gray-900 dark:text-gray-100">27%</span>
-                                    </li>
-                                    <li class="flex items-center justify-between">
-                                        <span>Sinkronisasi LMS</span>
-                                        <span class="font-semibold text-gray-900 dark:text-gray-100">21%</span>
-                                    </li>
+                                    @foreach ($issueLabelsValue as $index => $label)
+                                        <li class="flex items-center justify-between">
+                                            <span>{{ $label }}</span>
+                                            <span class="font-semibold text-gray-900 dark:text-gray-100">{{ $issueDataValue->get($index, 0) }}%</span>
+                                        </li>
+                                    @endforeach
                                 </ul>
                             </div>
                         </div>
@@ -122,7 +140,7 @@
                             <div>
                                 <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Lecturer Chatbot Assistant</h3>
                                 <p class="text-sm text-slate-600 dark:text-slate-300">
-                                    Dapatkan cadangan pengajaran berdasarkan kelas dan subjek anda.
+                                    Get teaching suggestions based on your classes and subjects.
                                 </p>
                             </div>
                             <span class="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-200">
@@ -140,11 +158,11 @@
                             @csrf
                             <div>
                                 <label for="classroom_id" class="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                                    Kelas
+                                    Class
                                 </label>
                                 <select id="classroom_id" name="classroom_id" {{ $classrooms->isNotEmpty() ? 'required' : '' }}
                                     class="mt-2 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
-                                    <option value="">Pilih kelas</option>
+                                    <option value="">Select class</option>
                                     @foreach ($classrooms as $classroom)
                                         <option value="{{ $classroom->id }}" {{ old('classroom_id') == $classroom->id ? 'selected' : '' }}>
                                             {{ $classroom->name }}
@@ -152,7 +170,7 @@
                                     @endforeach
                                 </select>
                                 @if ($classrooms->isEmpty())
-                                    <p class="mt-2 text-xs text-rose-600 dark:text-rose-300">Tiada kelas ditetapkan buat masa ini.</p>
+                                    <p class="mt-2 text-xs text-rose-600 dark:text-rose-300">No classes assigned yet.</p>
                                 @endif
                                 @error('classroom_id')
                                     <p class="mt-2 text-xs text-rose-600 dark:text-rose-300">{{ $message }}</p>
@@ -161,11 +179,11 @@
 
                             <div>
                                 <label for="subject_id" class="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                                    Subjek
+                                    Subject
                                 </label>
                                 <select id="subject_id" name="subject_id" required
                                     class="mt-2 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
-                                    <option value="">Pilih subjek</option>
+                                    <option value="">Select subject</option>
                                     @foreach ($subjects as $subject)
                                         <option value="{{ $subject->id }}" {{ old('subject_id') == $subject->id ? 'selected' : '' }}>
                                             {{ $subject->name }}
@@ -173,7 +191,7 @@
                                     @endforeach
                                 </select>
                                 @if ($subjects->isEmpty())
-                                    <p class="mt-2 text-xs text-amber-600 dark:text-amber-300">Subjek belum ditetapkan untuk kelas ini.</p>
+                                    <p class="mt-2 text-xs text-amber-600 dark:text-amber-300">No subject assigned to this class.</p>
                                 @endif
                                 @error('subject_id')
                                     <p class="mt-2 text-xs text-rose-600 dark:text-rose-300">{{ $message }}</p>
@@ -182,7 +200,7 @@
 
                             <div>
                                 <label for="prompt" class="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                                    Nota pensyarah (opsyenal)
+                                    Lecturer notes (optional)
                                 </label>
                                 <textarea id="prompt" name="prompt" rows="3"
                                     class="mt-2 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">{{ old('prompt') }}</textarea>
@@ -194,10 +212,10 @@
                             <div class="lg:col-span-3 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
                                 <button type="submit"
                                     class="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300">
-                                    Dapatkan cadangan
+                                    Get suggestions
                                 </button>
                                 <p class="text-xs text-slate-500 dark:text-slate-400">
-                                    Cadangan dijana berdasarkan kelas dan subjek yang dipilih.
+                                    Suggestions are generated from the selected class and subject.
                                 </p>
                             </div>
                         </form>
@@ -239,9 +257,9 @@
                 new Chart(document.getElementById('ratingTrendChart'), {
                     type: 'line',
                     data: {
-                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'],
+                        labels: @json($ratingTrendLabels ?? []),
                         datasets: [{
-                            data: [3.8, 3.9, 4.1, 4.0, 4.2, 4.3],
+                            data: @json($ratingTrendData ?? []),
                             borderColor: '#4f46e5',
                             backgroundColor: 'rgba(79, 70, 229, 0.15)',
                             fill: true,
@@ -262,9 +280,9 @@
                 new Chart(document.getElementById('sentimentChart'), {
                     type: 'bar',
                     data: {
-                        labels: ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'],
+                        labels: @json($sentimentTrendLabels ?? []),
                         datasets: [{
-                            data: [68, 70, 74, 71, 73, 75, 72],
+                            data: @json($sentimentTrendData ?? []),
                             backgroundColor: '#22c55e',
                             borderRadius: 6
                         }]
@@ -281,9 +299,9 @@
                 new Chart(document.getElementById('issuesChart'), {
                     type: 'doughnut',
                     data: {
-                        labels: ['Wi-Fi', 'Proyektor', 'LMS', 'Lainnya'],
+                        labels: @json($issueLabels ?? []),
                         datasets: [{
-                            data: [38, 27, 21, 14],
+                            data: @json($issueData ?? []),
                             backgroundColor: ['#f97316', '#facc15', '#38bdf8', '#94a3b8'],
                             borderWidth: 0
                         }]
