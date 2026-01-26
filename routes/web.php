@@ -9,7 +9,7 @@ use App\Http\Controllers\LecturerChatbotController;
 
 Route::get('/', function () {
     return view('welcome');
-});
+})->name('welcome');
 
 Route::get('/feedback', [FeedbackController::class, 'create']);
 Route::post('/feedback', [FeedbackController::class, 'store']);
@@ -40,4 +40,4 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
