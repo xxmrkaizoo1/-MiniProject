@@ -1,0 +1,17 @@
+<svg width="640" height="640" viewBox="0 0 640 640" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Student Voice Hub logo">
+  <defs>
+    <linearGradient id="svhGradient" x1="90" y1="80" x2="550" y2="560" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#38BDF8"/>
+      <stop offset="1" stop-color="#6366F1"/>
+    </linearGradient>
+  </defs>
+  <rect x="40" y="40" width="560" height="560" rx="120" fill="#0F172A"/>
+  <rect x="60" y="60" width="520" height="520" rx="100" fill="url(#svhGradient)" opacity="0.15"/>
+  <path d="M214 180h212l24 70 68 40-26 176a56 56 0 0 1-55 48H203a56 56 0 0 1-55-48l-26-176 68-40 24-70z" fill="#F8FAFC"/>
+  <path d="M320 216l-52 68 52 48 52-48-52-68z" fill="#0F172A"/>
+  <path d="M268 340l52 44 52-44v120H268V340z" fill="#0F172A"/>
+  <circle cx="460" cy="176" r="48" fill="#F8FAFC"/>
+  <path d="M438 168h44M438 188h30" stroke="#0F172A" stroke-width="10" stroke-linecap="round"/>
+  <path d="M206 250l-54 32" stroke="#0F172A" stroke-width="12" stroke-linecap="round"/>
+  <path d="M434 250l54 32" stroke="#0F172A" stroke-width="12" stroke-linecap="round"/>
+</svg>
