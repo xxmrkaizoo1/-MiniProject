@@ -6,7 +6,7 @@ use App\Models\Classroom;
 use App\Models\Feedback;
 use App\Models\Subject;
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\Http;
 class LecturerChatbotController extends Controller
 {
     public function dashboard()
@@ -69,7 +69,9 @@ class LecturerChatbotController extends Controller
         $subject = Subject::find($validated['subject_id']);
         $prompt = $validated['prompt'] ?? '';
 
-        $response = collect([
+        $ollamaResponse = $this->generateOllamaResponse($subject, $classroomName, $prompt)
+
+        $response = $ollamaResponse ?? collect([
             "Subject focus: {$subject->name}.",
             $classroomName ? "Class context: {$classroomName}." : 'Class context: not specified.',
             'Advice: Highlight the learning outcomes at the start, include one short activity, and end with a recap question.',
@@ -78,5 +80,42 @@ class LecturerChatbotController extends Controller
         ])->filter()->implode(' ');
 
         return back()->with('chatbot_response', $response);
+    }
+
+     private function generateOllamaResponse(Subject $subject, ?string $classroomName, string $prompt): ?string
+    {
+        $baseUrl = rtrim((string) config('services.ollama.base_url'), '/');
+        $model = (string) config('services.ollama.model');
+
+        if ($baseUrl === '' || $model === '') {
+            return null;
+        }
+
+        $systemPrompt = 'You are a helpful teaching assistant for lecturers. Provide concise, actionable advice in 3-5 sentences.';
+        $context = collect([
+            "Subject: {$subject->name}.",
+            $classroomName ? "Classroom: {$classroomName}." : 'Classroom: not specified.',
+            $prompt !== '' ? "Lecturer note: {$prompt}." : null,
+        ])->filter()->implode(' ');
+
+        $payload = [
+            'model' => $model,
+            'prompt' => "{$systemPrompt}\n{$context}",
+            'stream' => false,
+            'options' => [
+                'temperature' => (float) config('services.ollama.temperature', 0.4),
+            ],
+        ];
+
+        $timeout = (int) config('services.ollama.timeout', 10);
+        $response = Http::timeout($timeout)->post("{$baseUrl}/api/generate", $payload);
+
+        if (! $response->ok()) {
+            return null;
+        }
+
+        $generated = trim((string) $response->json('response'));
+
+        return $generated !== '' ? $generated : null;
     }
 }
