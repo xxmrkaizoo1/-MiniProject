@@ -13,7 +13,7 @@ use Illuminate\Support\Str;
 
 class LecturerChatbotController extends Controller
 {
-    public function dashboard()
+    public function dashboard(Request $request)
     {
         $user = auth()->user();
 
@@ -27,7 +27,9 @@ class LecturerChatbotController extends Controller
             ->orderBy('name')
             ->get();
 
-        $subjectNames = $subjects->pluck('name');
+        $selectedSubjectId = $request->query('subject_id');
+        $selectedSubject = $selectedSubjectId ? $subjects->firstWhere('id', (int) $selectedSubjectId) : null;
+        $subjectNames = $selectedSubject ? collect([$selectedSubject->name]) : $subjects->pluck('name');
         $feedbacks = Feedback::query()
             ->when($subjectNames->isNotEmpty(), function ($query) use ($subjectNames) {
                 $query->whereIn('subject', $subjectNames);
@@ -222,6 +224,7 @@ class LecturerChatbotController extends Controller
         return view('dashboard', [
             'classrooms' => $classrooms,
             'subjects' => $subjects,
+            'selectedSubject' => $selectedSubject,
             'feedbacks' => $feedbacks,
             'avgRating' => $avgRating,
             'negativeCount' => $negativeCount,

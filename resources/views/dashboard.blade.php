@@ -22,6 +22,12 @@
                     <p class="text-sm text-slate-600 dark:text-slate-300">
                         Track performance, insights, and student feedback at a glance.
                     </p>
+                    <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                        Showing statistics for
+                        <span class="font-semibold text-slate-700 dark:text-slate-200">
+                            {{ $selectedSubject?->name ?? 'all subjects' }}
+                        </span>.
+                    </p>
                 </div>
                 @if ($notification)
                     <div
@@ -31,6 +37,32 @@
                     </div>
                 @endif
             </header>
+            <section
+                class="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-5 text-sm shadow-sm dark:border-slate-700 dark:bg-gray-900 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <p class="font-semibold text-slate-900 dark:text-white">Filter dashboard statistics</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">
+                        Choose a subject to see rating, sentiment, and issues for that course only.
+                    </p>
+                </div>
+                <form method="GET" action="{{ route('dashboard') }}" class="flex w-full gap-2 sm:w-auto">
+                    <select name="subject_id"
+                        class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 sm:w-56">
+                        <option value="">All subjects</option>
+                        @foreach ($subjects as $subject)
+                            <option value="{{ $subject->id }}"
+                                {{ $selectedSubject && $selectedSubject->id === $subject->id ? 'selected' : '' }}>
+                                {{ $subject->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <button type="submit"
+                        class="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-900">
+                        Apply
+                    </button>
+                </form>
+            </section>
+
 
             <section class="grid gap-6 lg:grid-cols-3">
                 <div
@@ -57,7 +89,8 @@
                     <div class="flex items-start justify-between">
                         <div>
                             <p class="text-sm font-semibold text-slate-500 dark:text-slate-300">Weekly Sentiment</p>
-                            <p class="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">{{ $weeklyPositiveRate }}%
+                            <p class="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">
+                                {{ $weeklyPositiveRate }}%
                                 Positive</p>
                         </div>
                         <span

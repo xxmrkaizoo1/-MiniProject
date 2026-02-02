@@ -12,7 +12,7 @@ use Illuminate\Support\Str;
 
 class LecturerChatbotController extends Controller
 {
-    public function dashboard()
+    public function dashboard(Request $request)
     {
         $classrooms = Classroom::with('subject')
             ->withCount('enrollments')
@@ -24,7 +24,9 @@ class LecturerChatbotController extends Controller
             ->orderBy('name')
             ->get();
 
-        $subjectNames = $subjects->pluck('name');
+        $selectedSubjectId = $request->query('subject_id');
+        $selectedSubject = $selectedSubjectId ? $subjects->firstWhere('id', (int) $selectedSubjectId) : null;
+        $subjectNames = $selectedSubject ? collect([$selectedSubject->name]) : $subjects->pluck('name');
         $feedbackQuery = Feedback::query();
         if ($subjectNames->isNotEmpty()) {
             $feedbackQuery->whereIn('subject', $subjectNames);
@@ -46,6 +48,7 @@ class LecturerChatbotController extends Controller
         return view('dashboard', [
             'classrooms' => $classrooms,
             'subjects' => $subjects,
+            'selectedSubject' => $selectedSubject,
             'avgRating' => $avgRating,
             'negativeCount' => $negativeCount,
             'totalFeedback' => $totalFeedback,
@@ -89,8 +92,7 @@ class LecturerChatbotController extends Controller
         ?string $classroomName,
         string $prompt,
         array $insights
-    ): ?string
-    {
+    ): ?string {
         $baseUrl = rtrim((string) config('services.ollama.base_url'), '/');
         $model = (string) config('services.ollama.model');
 
@@ -344,7 +346,7 @@ class LecturerChatbotController extends Controller
         $lines[] = '';
         $lines[] = $prompt ? "Lecturer note: \"{$prompt}\"." : null;
 
-        return collect($lines)->filter(fn ($line) => $line !== null)->implode("\n");
+        return collect($lines)->filter(fn($line) => $line !== null)->implode("\n");
     }
 
     private function formatList(array $items, string $emptyValue, string $separator = ', '): string
