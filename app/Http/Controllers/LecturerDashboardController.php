@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
-class LecturerChatbotController extends Controller
+class LecturerDashboardController extends Controller
 {
     public function dashboard(Request $request)
     {
@@ -30,9 +30,14 @@ class LecturerChatbotController extends Controller
         $selectedSubjectId = $request->query('subject_id');
         $selectedSubject = $selectedSubjectId ? $subjects->firstWhere('id', (int) $selectedSubjectId) : null;
         $subjectNames = $selectedSubject ? collect([$selectedSubject->name]) : $subjects->pluck('name');
+        $normalizedSubjectNames = $subjectNames
+            ->filter()
+            ->map(fn($name) => Str::lower((string) $name))
+            ->values();
         $feedbacks = Feedback::query()
-            ->when($subjectNames->isNotEmpty(), function ($query) use ($subjectNames) {
-                $query->whereIn('subject', $subjectNames);
+            ->when($normalizedSubjectNames->isNotEmpty(), function ($query) use ($normalizedSubjectNames) {
+                $placeholders = $normalizedSubjectNames->map(fn() => '?')->implode(',');
+                $query->whereRaw("LOWER(subject) IN ({$placeholders})", $normalizedSubjectNames->all());
             }, function ($query) {
                 $query->whereRaw('1 = 0');
             })
@@ -129,8 +134,17 @@ class LecturerChatbotController extends Controller
         };
 
         $now = Carbon::now();
-        $ratingTrendMonths = collect(range(5, 0))->map(function (int $offset) use ($now) {
-            return $now->copy()->subMonths($offset)->startOfMonth();
+        $referenceDate = $feedbacks->max('created_at');
+        if ($referenceDate) {
+            $referenceDate = Carbon::parse($referenceDate);
+        } else {
+            $referenceDate = $now;
+        }
+        if ($referenceDate->lessThan($now)) {
+            $referenceDate = $now;
+        }
+        $ratingTrendMonths = collect(range(5, 0))->map(function (int $offset) use ($referenceDate) {
+            return $referenceDate->copy()->subMonths($offset)->startOfMonth();
         });
 
         $ratingTrendLabels = $ratingTrendMonths->map(fn(Carbon $month) => $month->format('M'));
@@ -145,8 +159,8 @@ class LecturerChatbotController extends Controller
             ? round((($currentMonthAverage - $previousMonthAverage) / $previousMonthAverage) * 100)
             : 0;
 
-        $weeklyDays = collect(range(6, 0))->map(function (int $offset) use ($now) {
-            return $now->copy()->subDays($offset)->startOfDay();
+        $weeklyDays = collect(range(6, 0))->map(function (int $offset) use ($referenceDate) {
+            return $referenceDate->copy()->subDays($offset)->startOfDay();
         });
 
         $sentimentTrendLabels = $weeklyDays->map(fn(Carbon $day) => $day->format('D'));
@@ -165,7 +179,7 @@ class LecturerChatbotController extends Controller
             return round(($positiveCount / $total) * 100);
         });
 
-        $weeklyFeedback = $feedbacks->filter(fn($feedback) => $feedback->created_at && $feedback->created_at->greaterThanOrEqualTo($now->copy()->subDays(6)->startOfDay()));
+        $weeklyFeedback = $feedbacks->filter(fn($feedback) => $feedback->created_at && $feedback->created_at->greaterThanOrEqualTo($referenceDate->copy()->subDays(6)->startOfDay()));
         $weeklyTotal = $weeklyFeedback->count();
         $weeklyPositive = $weeklyFeedback->filter(function ($feedback) use ($inferSentiment) {
             return $inferSentiment($feedback->rating, (string) $feedback->comments) === 'positive';

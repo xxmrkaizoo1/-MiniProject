@@ -6,6 +6,7 @@ use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\ClassroomController;
 use App\Http\Controllers\LecturerChatbotController;
+use App\Http\Controllers\LecturerDashboardController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -28,8 +29,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
         ->name('admin.classrooms.enrollments.store');
 });
 
-Route::get('/dashboard', [LecturerChatbotController::class, 'dashboard'])
-    ->middleware(['auth', 'verified'])
+Route::get('/dashboard', [LecturerDashboardController::class, 'dashboard'])->middleware(['auth', 'verified'])
     ->name('dashboard');
 
 Route::post('/lecturer/chatbot', [LecturerChatbotController::class, 'respond'])
