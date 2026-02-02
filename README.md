@@ -51,3 +51,17 @@ Student Voice Hub is a Laravel-based feedback portal for higher education classe
 ```bash
 composer install
 npm install
+```
+
+## Project Structure Highlights
+
+The project follows a standard Laravel layout with a few front-end and tooling additions for Tailwind and Vite. A full directory-by-directory breakdown lives in [`docs/PROJECT_STRUCTURE.md`](docs/PROJECT_STRUCTURE.md).
+
+- `app/`: Application source code (controllers, models, services, policies, etc.).
+- `routes/`: Web route definitions.
+- `resources/`: Blade templates, Tailwind styles, and front-end assets.
+- `database/`: Migrations, factories, and seeders.
+- `public/`: Public web root and compiled asset entry points.
+- `config/`: Configuration files for Laravel and third-party packages.
+- `tests/`: Feature and unit tests.
+- `storage/`: Logs, cache, and generated files.
