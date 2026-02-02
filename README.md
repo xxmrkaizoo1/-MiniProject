@@ -55,3 +55,104 @@
 ```bash
 composer install
 npm install
+```
+
+### 2) Configure environment
+
+```bash
+cp .env.example .env
+php artisan key:generate
+```
+
+### 3) Set up database
+
+Update your `.env` file with the correct database credentials, then run:
+
+```bash
+php artisan migrate --seed
+```
+
+### 4) Run the app
+
+```bash
+php artisan serve
+npm run dev
+```
+
+Open the app at `http://localhost:8000`.
+
+## Role Setup
+
+1. Log in as an admin (seeders create a default admin user).
+2. Create subjects and classes from the admin dashboard.
+3. Enroll students and assign lecturers.
+4. Students can submit feedback for their enrolled classes.
+
+> Tip: Review the seeders in `database/seeders/` if you want to customize default users or demo data.
+
+## Useful Commands
+
+| Task | Command |
+| --- | --- |
+| Run the local server | `php artisan serve` |
+| Run Vite dev server | `npm run dev` |
+| Build front-end assets | `npm run build` |
+| Run tests | `php artisan test` |
+| Clear caches | `php artisan optimize:clear` |
+
+## Project Structure Highlights
+
+The project follows a standard Laravel layout with a few front-end and tooling additions for Tailwind and Vite.
+
+```
+.
+├── app/                     # Core Laravel application code
+│   ├── Http/                # Controllers, middleware, form requests
+│   ├── Models/              # Eloquent models
+│   ├── Providers/           # Service providers
+│   └── View/                # View composers and related helpers
+├── bootstrap/               # Framework bootstrapping and cache
+├── config/                  # Application configuration
+├── database/                # Migrations, factories, seeders
+│   ├── factories/
+│   ├── migrations/
+│   └── seeders/
+├── public/                  # Web root and static entry points
+├── resources/               # UI and front-end source
+│   ├── css/                 # Tailwind entry points
+│   ├── js/                  # Front-end scripts
+│   └── views/               # Blade templates
+├── routes/                  # Route definitions
+├── storage/                 # Logs, cache, user uploads
+├── tests/                   # Feature and unit tests
+├── artisan                  # Laravel CLI entry point
+├── composer.json            # PHP dependencies
+├── package.json             # Node dependencies
+└── vite.config.js           # Vite bundler configuration
+```
+
+### Where to make changes
+
+#### Back-end (Laravel)
+- **Controllers and middleware** live in `app/Http/`.
+- **Data models** are defined in `app/Models/`.
+- **Route wiring** happens in `routes/` (start with `routes/web.php`).
+- **Database changes** are tracked in `database/migrations/`, with seed data in `database/seeders/`.
+
+#### Front-end (Blade + Tailwind)
+- **Views** are in `resources/views/`.
+- **Styles** start in `resources/css/`.
+- **Scripts** and light interactivity are in `resources/js/`.
+
+#### Tooling and configuration
+- **Laravel and package configuration** is in `config/`.
+- **Vite** and **Tailwind** settings live in `vite.config.js` and `tailwind.config.js`.
+- **Environment variables** go in `.env` (based on `.env.example`).
+
+#### Tests
+- **Feature tests** are in `tests/Feature/`.
+- **Unit tests** are in `tests/Unit/`.
+
+## License
+
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
