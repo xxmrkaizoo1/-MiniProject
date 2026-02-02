@@ -41,7 +41,7 @@ class LecturerDashboardController extends Controller
             }, function ($query) {
                 $query->whereRaw('1 = 0');
             })
-            ->get(['rating', 'comments', 'created_at']);
+            ->get(['subject', 'rating', 'mood_rating', 'comments', 'created_at']);
 
         $avgRating = $feedbacks->avg('rating');
         $totalFeedback = max($feedbacks->count(), 1);
@@ -135,14 +135,7 @@ class LecturerDashboardController extends Controller
 
         $now = Carbon::now();
         $referenceDate = $feedbacks->max('created_at');
-        if ($referenceDate) {
-            $referenceDate = Carbon::parse($referenceDate);
-        } else {
-            $referenceDate = $now;
-        }
-        if ($referenceDate->lessThan($now)) {
-            $referenceDate = $now;
-        }
+        $referenceDate = $referenceDate ? Carbon::parse($referenceDate) : $now;
         $ratingTrendMonths = collect(range(5, 0))->map(function (int $offset) use ($referenceDate) {
             return $referenceDate->copy()->subMonths($offset)->startOfMonth();
         });
