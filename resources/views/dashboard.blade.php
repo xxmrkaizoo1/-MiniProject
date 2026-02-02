@@ -14,6 +14,7 @@
                 $sentimentTrendData = $sentimentTrendData ?? [];
                 $issueLabelsValue = collect($issueLabels ?? []);
                 $issueDataValue = collect($issueData ?? []);
+                $focusAreaAdvice = $focusAreaAdvice ?? null;
             @endphp
             <header class="flex flex-wrap items-center justify-between gap-4">
                 <div>
@@ -94,6 +95,13 @@
                             </li>
                         @endforeach
                     </ul>
+                    @if ($focusAreaAdvice)
+                        <div
+                            class="mt-4 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-3 text-xs text-indigo-900 dark:border-indigo-500/30 dark:bg-indigo-500/10 dark:text-indigo-100">
+                            <p class="font-semibold">AI focus actions</p>
+                            <p class="mt-1 whitespace-pre-line">{{ $focusAreaAdvice }}</p>
+                        </div>
+                    @endif
                 </div>
             </section>
 

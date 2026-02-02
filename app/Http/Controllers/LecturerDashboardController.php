@@ -207,6 +207,9 @@ class LecturerChatbotController extends Controller
         });
 
         $negativeRatio = $totalFeedback > 0 ? round(($negativeCount / $totalFeedback) * 100) : 0;
+        $focusAreaAdvice = $this->buildFocusAreaAdvice($subjectNames, $issuePercentages, $negativeRatio);
+
+
 
         $notification = null;
         if ($totalFeedback > 0 && ($avgRating < 3 || $negativeRatio >= 30)) {
@@ -234,6 +237,7 @@ class LecturerChatbotController extends Controller
             'sentimentTrendData' => $sentimentTrendData,
             'issueLabels' => $issuePercentages->keys()->values(),
             'issueData' => $issuePercentages->values(),
+            'focusAreaAdvice' => $focusAreaAdvice,
         ]);
     }
 
@@ -528,6 +532,63 @@ class LecturerChatbotController extends Controller
 
         return collect($lines)->filter(fn($line) => $line !== null)->implode("\n");
     }
+    private function buildFocusAreaAdvice($subjectNames, $issuePercentages, int $negativeRatio): string
+    {
+        if ($issuePercentages->sum() === 0) {
+            return 'No focus areas identified yet. Encourage students to share quick feedback after each class.';
+        }
+
+        $topIssues = $issuePercentages
+            ->sortDesc()
+            ->filter(fn($value) => $value > 0)
+            ->take(3)
+            ->map(fn($value, $label) => sprintf('%s (%s%%)', $label, $value))
+            ->values()
+            ->all();
+
+        $subjectsLine = $subjectNames->isNotEmpty()
+            ? $subjectNames->take(5)->implode(', ')
+            : 'no subjects';
+        $issuesLine = $topIssues !== [] ? implode(', ', $topIssues) : 'no major issues';
+
+        $baseUrl = rtrim((string) config('services.ollama.base_url'), '/');
+        $model = (string) config('services.ollama.model');
+        if ($baseUrl !== '' && $model !== '') {
+            $systemPrompt = 'You are an academic performance analyst. Provide 2-3 concise action steps.';
+            $prompt = "Subjects: {$subjectsLine}.\nTop issues: {$issuesLine}.\nNegative ratio: {$negativeRatio}%.\nSuggest focus actions for the lecturer.";
+            $payload = [
+                'model' => $model,
+                'prompt' => "{$systemPrompt}\n{$prompt}",
+                'stream' => false,
+                'options' => [
+                    'temperature' => (float) config('services.ollama.temperature', 0.4),
+                ],
+            ];
+
+            $timeout = (int) config('services.ollama.timeout', 10);
+            try {
+                $response = Http::timeout($timeout)->post("{$baseUrl}/api/generate", $payload);
+                if ($response->ok()) {
+                    $generated = trim((string) $response->json('response'));
+                    if ($generated !== '') {
+                        return $generated;
+                    }
+                }
+            } catch (ConnectionException) {
+                // Fallback below.
+            }
+        }
+
+        $action = 'Action: Schedule a quick check-in and clarify expectations next class.';
+        if ($negativeRatio >= 30) {
+            $action = 'Action: Prioritize the top issue areas, slow the pacing slightly, and add a short recap to confirm understanding.';
+        }
+
+        return "Focus areas: {$issuesLine}. {$action}";
+    }
+
+
+
 
     private function formatList(array $items, string $emptyValue, string $separator = ', '): string
     {
