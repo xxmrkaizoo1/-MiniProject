@@ -17,6 +17,7 @@
 - [Getting Started](#getting-started)
 - [Role Setup](#role-setup)
 - [Useful Commands](#useful-commands)
+- [AI (Ollama)](#ai-ollama)
 - [Project Structure Highlights](#project-structure-highlights)
 - [License](#license)
 
@@ -26,6 +27,7 @@
 - **Lecturer dashboard**: class overview, feedback totals, average rating, and negative sentiment indicators.
 - **Admin tools**: manage subjects, create classes, enroll students, and review feedback lists.
 - **Action prompts**: a lightweight lecturer chatbot prompt helper to guide next-lesson actions.
+- **AI assistance**: optional local AI prompts powered by Ollama.
 
 ## User Roles
 
@@ -99,6 +101,25 @@ Open the app at `http://localhost:8000`.
 | Build front-end assets | `npm run build` |
 | Run tests | `php artisan test` |
 | Clear caches | `php artisan optimize:clear` |
+
+
+## AI (Ollama)
+
+The project can optionally use a local Ollama model for AI prompt assistance. Make sure Ollama is installed and running, then point the app to your local endpoint.
+
+1. Install Ollama from [https://ollama.com](https://ollama.com).
+2. Start the Ollama service and pull a model, for example:
+
+```bash
+ollama run llama3
+```
+
+3. Configure your `.env` with the Ollama base URL and model name (example):
+
+```
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_MODEL=llama3
+```
 
 ## Project Structure Highlights
 
