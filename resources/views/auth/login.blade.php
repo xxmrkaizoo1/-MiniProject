@@ -53,14 +53,14 @@
                 {{ __('Choose an account') }}
             </p>
             <div class="space-y-2">
-                <button type="button" class="quick-login-option flex w-full items-center gap-3 rounded-md border border-gray-200 dark:border-gray-700 px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700/60" data-quick-email="google@gmail.com" data-quick-password="password">
+                <button type="button" class="quick-login-option flex w-full items-center gap-3 rounded-md border border-gray-200 dark:border-gray-700 px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700/60" data-quick-action="google">
                     <span class="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-300">G</span>
                     <span>
                         <span class="block font-medium">{{ __('Google Account') }}</span>
                         <span class="block text-xs text-gray-500 dark:text-gray-400">google@gmail.com</span>
                     </span>
                 </button>
-                <button type="button" class="quick-login-option flex w-full items-center gap-3 rounded-md border border-gray-200 dark:border-gray-700 px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700/60" data-quick-email="demo@gmail.com" data-quick-password="password">
+                <button type="button" class="quick-login-option flex w-full items-center gap-3 rounded-md border border-gray-200 dark:border-gray-700 px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700/60" data-quick-action="demo" data-quick-email="demo@gmail.com" data-quick-password="password">
                     <span class="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-300">D</span>
                     <span>
                         <span class="block font-medium">{{ __('Demo Account') }}</span>
@@ -89,8 +89,15 @@
 
             quickLoginOptions.forEach((option) => {
                 option.addEventListener('click', () => {
+                    const action = option.dataset.quickAction;
                     const email = option.dataset.quickEmail;
                     const password = option.dataset.quickPassword;
+
+                    if (action === 'google') {
+                        window.open('https://accounts.google.com/AccountChooser?service=mail', '_blank', 'noopener');
+                        quickLoginMenu.classList.add('hidden');
+                        return;
+                    }
 
                     if (!email || !password) {
                         return;
