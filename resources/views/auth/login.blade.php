@@ -57,7 +57,7 @@
                     <span class="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-300">G</span>
                     <span>
                         <span class="block font-medium">{{ __('Google Account') }}</span>
-                        <span class="block text-xs text-gray-500 dark:text-gray-400">google@gmail.com</span>
+                        <span class="block text-xs text-gray-500 dark:text-gray-400">{{ __('Use an existing Google email') }}</span>
                     </span>
                 </button>
                 <button type="button" class="quick-login-option flex w-full items-center gap-3 rounded-md border border-gray-200 dark:border-gray-700 px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700/60" data-quick-action="demo" data-quick-email="demo@gmail.com" data-quick-password="password">
@@ -71,6 +71,11 @@
         </div>
     </form>
 
+    <form method="POST" action="{{ route('google.login') }}" id="google-login-form" class="hidden">
+        @csrf
+        <input type="hidden" name="email" id="google-login-email" />
+    </form>
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const quickLoginButton = document.getElementById('quick-login');
@@ -78,8 +83,10 @@
             const passwordInput = document.getElementById('password');
             const quickLoginMenu = document.getElementById('quick-login-menu');
             const quickLoginOptions = document.querySelectorAll('.quick-login-option');
+            const googleLoginForm = document.getElementById('google-login-form');
+            const googleLoginEmail = document.getElementById('google-login-email');
 
-            if (!quickLoginButton || !emailInput || !passwordInput || !quickLoginMenu) {
+            if (!quickLoginButton || !emailInput || !passwordInput || !quickLoginMenu || !googleLoginForm || !googleLoginEmail) {
                 return;
             }
 
@@ -94,7 +101,13 @@
                     const password = option.dataset.quickPassword;
 
                     if (action === 'google') {
-                        window.open('https://accounts.google.com/AccountChooser?service=mail', '_blank', 'noopener');
+                        const googleEmail = window.prompt('Enter your Google email');
+
+                        if (googleEmail) {
+                            googleLoginEmail.value = googleEmail;
+                            googleLoginForm.submit();
+                        }
+
                         quickLoginMenu.classList.add('hidden');
                         return;
                     }
