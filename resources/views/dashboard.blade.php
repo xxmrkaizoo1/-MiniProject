@@ -267,9 +267,15 @@
 @endsection
 
 @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"
+        integrity="sha256-C6Xdk6VtzCVmQxjvLJTFn17/NOF4d23L6QwWQhNktOU=" crossorigin="anonymous"></script>
     <script>
+        if (typeof window.Chart === 'undefined') {
+            console.error('Chart.js failed to load, dashboard charts are unavailable.');
+        }
+
         const ratingCtx = document.getElementById('ratingChart');
-        if (ratingCtx) {
+        if (ratingCtx && typeof window.Chart !== 'undefined') {
             new Chart(ratingCtx, {
                 type: 'line',
                 data: {
@@ -305,7 +311,8 @@
         }
 
         const sentimentCtx = document.getElementById('sentimentChart');
-        if (sentimentCtx) {
+        if (sentimentCtx && typeof window.Chart !== 'undefined') {
+
             new Chart(sentimentCtx, {
                 type: 'line',
                 data: {
@@ -341,7 +348,7 @@
         }
 
         const issuesCtx = document.getElementById('issuesChart');
-        if (issuesCtx) {
+        if (issuesCtx && typeof window.Chart !== 'undefined') {
             new Chart(issuesCtx, {
                 type: 'doughnut',
                 data: {
