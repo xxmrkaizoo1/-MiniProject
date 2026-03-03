@@ -294,7 +294,7 @@ class LecturerDashboardController extends Controller
             return null;
         }
 
-        $systemPrompt = 'You are a helpful teaching assistant for lecturers. Provide concise, actionable advice in 4-6 sentences.';
+        $systemPrompt = 'You are a helpful teaching assistant for lecturers. Use lecturer notes + feedback statistics as primary evidence. Provide concise, actionable advice in 4-6 sentences with priorities.';
         $themesLine = $this->formatList($insights['themes'], 'none yet');
         $issuesLine = $this->formatList($insights['issues'], 'none yet');
         $highlightsLine = $this->formatList($insights['highlights'], 'none yet', ' | ');
@@ -305,6 +305,7 @@ class LecturerDashboardController extends Controller
             $insights['summary'],
             "Common themes: {$themesLine}.",
             "Top issues: {$issuesLine}.",
+            'Priority action plan (notes + stats): ' . $this->buildActionPlanFromInsights($insights, $prompt) . '.',
             "Sample comments: {$highlightsLine}.",
         ])->filter()->implode("\n");
 
@@ -525,13 +526,7 @@ class LecturerDashboardController extends Controller
             '',
         ];
 
-        $action = 'Action: Keep the lesson structure clear, add one short activity, and end with a recap question.';
-        if (($insights['negativeRatio'] ?? 0) >= 30) {
-            $action = 'Action: Address the top issue keywords first, slow down the pacing, and add a quick check-for-understanding.';
-        } elseif (($insights['avgRating'] ?? 0) >= 4) {
-            $action = 'Action: Preserve what works well, and ask students for one improvement request.';
-        }
-
+        $action = $this->buildActionPlanFromInsights($insights, $prompt);
         $lines[] = 'Action';
         $lines[] = "- {$action}";
         $lines[] = '';
@@ -597,6 +592,33 @@ class LecturerDashboardController extends Controller
         return "Focus areas: {$issuesLine}. {$action}";
     }
 
+    private function buildActionPlanFromInsights(array $insights, string $lecturerNote): string
+    {
+        $actions = [];
+
+        if (trim($lecturerNote) !== '') {
+            $actions[] = sprintf('Prioritize lecturer note: %s', trim($lecturerNote));
+        }
+
+        $negativeRatio = (int) ($insights['negativeRatio'] ?? 0);
+        $lowRatingRatio = (int) ($insights['lowRatingRatio'] ?? 0);
+        $topIssue = $insights['issues'][0] ?? null;
+
+        if ($negativeRatio >= 30 || $lowRatingRatio >= 30) {
+            $issuePart = $topIssue ? sprintf(' focusing on "%s"', $topIssue) : '';
+            $actions[] = 'Address highest-risk feedback first' . $issuePart . ', slow pacing, and run a quick understanding check.';
+        } elseif ((float) ($insights['avgRating'] ?? 0) >= 4) {
+            $actions[] = 'Preserve high-performing methods and ask students for one improvement suggestion.';
+        } else {
+            $actions[] = 'Tighten lesson structure, add a short active-learning task, and end with recap questions.';
+        }
+
+        if (! empty($insights['badCommentThemes'] ?? [])) {
+            $actions[] = 'Target recurring bad-comment keywords: ' . implode(', ', array_slice($insights['badCommentThemes'], 0, 3)) . '.';
+        }
+
+        return 'Action: ' . implode(' ', $actions);
+    }
 
 
 
