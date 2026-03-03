@@ -15,6 +15,23 @@
                 $issueLabelsValue = collect($issueLabels ?? []);
                 $issueDataValue = collect($issueData ?? []);
                 $focusAreaAdvice = $focusAreaAdvice ?? null;
+
+                $ratingPoints = collect($ratingTrendData)->values();
+                $ratingPointCount = max($ratingPoints->count(), 1);
+                $ratingSvgPoints = $ratingPoints->map(function ($value, $index) use ($ratingPointCount) {
+                    $x = $ratingPointCount > 1 ? round(($index / ($ratingPointCount - 1)) * 100, 2) : 50;
+                    $normalized = max(0, min(5, (float) $value));
+                    $y = round(100 - (($normalized / 5) * 100), 2);
+
+                    return "{$x},{$y}";
+                })->implode(' ');
+
+                $sentimentPairs = collect($sentimentTrendLabels)->values()->map(function ($label, $index) use ($sentimentTrendData) {
+                    return [
+                        'label' => $label,
+                        'value' => max(0, min(100, (int) ($sentimentTrendData[$index] ?? 0))),
+                    ];
+                });
             @endphp
             <header class="flex flex-wrap items-center justify-between gap-4">
                 <div>
@@ -79,8 +96,23 @@
                             {{ $ratingMoMChange >= 0 ? '+' : '' }}{{ $ratingMoMChange }}% MoM
                         </span>
                     </div>
-                    <div class="mt-4 h-40">
-                        <canvas id="ratingChart" aria-label="Rating trend chart"></canvas>
+                    <div class="mt-4 h-40 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-950">
+                        @if ($ratingPoints->isNotEmpty() && $ratingPoints->sum() > 0)
+                            <svg viewBox="0 0 100 100" class="h-full w-full" preserveAspectRatio="none" role="img"
+                                aria-label="Rating trend graph">
+                                <polyline points="{{ $ratingSvgPoints }}" fill="none" stroke="#6366F1" stroke-width="2.5"
+                                    stroke-linecap="round" stroke-linejoin="round"></polyline>
+                            </svg>
+                        @else
+                            <div class="flex h-full items-center justify-center text-xs text-slate-500 dark:text-slate-400">
+                                Not enough rating data to draw trend.
+                            </div>
+                        @endif
+                    </div>
+                    <div class="mt-2 flex justify-between text-[11px] text-slate-500 dark:text-slate-400">
+                        @foreach ($ratingTrendLabels as $label)
+                            <span>{{ $label }}</span>
+                        @endforeach
                     </div>
                 </div>
 
@@ -98,8 +130,21 @@
                             Needs attention
                         </span>
                     </div>
-                    <div class="mt-4 h-40">
-                        <canvas id="sentimentChart" aria-label="Weekly sentiment chart"></canvas>
+                    <div class="mt-4 h-40 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-950">
+                        @if ($sentimentPairs->isNotEmpty())
+                            <div class="grid h-full grid-cols-7 items-end gap-2">
+                                @foreach ($sentimentPairs as $item)
+                                    <div class="flex h-full flex-col items-center justify-end gap-2">
+                                        <div class="w-full rounded-t bg-orange-500/80" style="height: {{ max($item['value'], 4) }}%"></div>
+                                        <span class="text-[10px] text-slate-500 dark:text-slate-400">{{ $item['label'] }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="flex h-full items-center justify-center text-xs text-slate-500 dark:text-slate-400">
+                                No weekly sentiment data yet.
+                            </div>
+                        @endif
                     </div>
                 </div>
 
@@ -116,18 +161,20 @@
                             Needs follow-up
                         </span>
                     </div>
-                    <div class="mt-4 h-40">
-                        <canvas id="issuesChart" aria-label="Top issue distribution"></canvas>
-                    </div>
-                    <ul class="mt-4 space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                    <div class="mt-4 space-y-3">
                         @foreach ($issueLabelsValue as $index => $label)
-                            <li class="flex items-center justify-between">
-                                <span>{{ $label }}</span>
-                                <span
-                                    class="font-semibold text-gray-900 dark:text-gray-100">{{ $issueDataValue->get($index, 0) }}%</span>
-                            </li>
+                            @php($issuePercent = max(0, min(100, (int) $issueDataValue->get($index, 0))))
+                            <div>
+                                <div class="mb-1 flex items-center justify-between text-sm text-gray-600 dark:text-gray-300">
+                                    <span>{{ $label }}</span>
+                                    <span class="font-semibold text-gray-900 dark:text-gray-100">{{ $issuePercent }}%</span>
+                                </div>
+                                <div class="h-2 rounded-full bg-slate-200 dark:bg-slate-700">
+                                    <div class="h-2 rounded-full bg-indigo-500" style="width: {{ $issuePercent }}%"></div>
+                                </div>
+                            </div>
                         @endforeach
-                    </ul>
+                    </div>
                     @if ($focusAreaAdvice)
                         <div
                             class="mt-4 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-3 text-xs text-indigo-900 dark:border-indigo-500/30 dark:bg-indigo-500/10 dark:text-indigo-100">
@@ -265,110 +312,3 @@
         </div>
     </div>
 @endsection
-
-@push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"
-        integrity="sha256-C6Xdk6VtzCVmQxjvLJTFn17/NOF4d23L6QwWQhNktOU=" crossorigin="anonymous"></script>
-    <script>
-        if (typeof window.Chart === 'undefined') {
-            console.error('Chart.js failed to load, dashboard charts are unavailable.');
-        }
-
-        const ratingCtx = document.getElementById('ratingChart');
-        if (ratingCtx && typeof window.Chart !== 'undefined') {
-            new Chart(ratingCtx, {
-                type: 'line',
-                data: {
-                    labels: @json($ratingTrendLabels),
-                    datasets: [{
-                        label: 'Average Rating',
-                        data: @json($ratingTrendData),
-                        borderColor: '#6366F1',
-                        backgroundColor: 'rgba(99, 102, 241, 0.2)',
-                        tension: 0.4,
-                        fill: true,
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            min: 0,
-                            max: 5,
-                            ticks: {
-                                stepSize: 1
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    }
-                }
-            });
-        }
-
-        const sentimentCtx = document.getElementById('sentimentChart');
-        if (sentimentCtx && typeof window.Chart !== 'undefined') {
-
-            new Chart(sentimentCtx, {
-                type: 'line',
-                data: {
-                    labels: @json($sentimentTrendLabels),
-                    datasets: [{
-                        label: 'Positive Sentiment %',
-                        data: @json($sentimentTrendData),
-                        borderColor: '#F97316',
-                        backgroundColor: 'rgba(249, 115, 22, 0.2)',
-                        tension: 0.4,
-                        fill: true,
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            min: 0,
-                            max: 100,
-                            ticks: {
-                                callback: value => `${value}%`
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    }
-                }
-            });
-        }
-
-        const issuesCtx = document.getElementById('issuesChart');
-        if (issuesCtx && typeof window.Chart !== 'undefined') {
-            new Chart(issuesCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: @json($issueLabelsValue),
-                    datasets: [{
-                        data: @json($issueDataValue),
-                        backgroundColor: ['#F97316', '#FACC15', '#22C55E', '#6366F1'],
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    cutout: '70%',
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    }
-                }
-            });
-        }
-    </script>
-@endpush

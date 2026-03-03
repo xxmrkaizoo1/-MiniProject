@@ -71,17 +71,20 @@ class LecturerChatbotController extends Controller
             return back()->withErrors(['classroom_id' => 'Selected class is not assigned to you.']);
         }
 
-        $classroomName = $classes->firstWhere('id', $validated['classroom_id'])?->name;
+        $classroom = $validated['classroom_id']
+            ? $classes->firstWhere('id', $validated['classroom_id'])
+            : null;
+
         $subject = Subject::find($validated['subject_id']);
         $prompt = $validated['prompt'] ?? '';
-        $insights = $this->buildFeedbackInsights($subject, $classroomName);
+        $insights = $this->buildFeedbackInsights($subject, $classroom);
 
-        $ollamaResponse = $this->generateOllamaResponse($subject, $classroomName, $prompt, $insights);
+        $ollamaResponse = $this->generateOllamaResponse($subject, $classroom, $prompt, $insights);
 
         if ($ollamaResponse) {
             $response = $ollamaResponse;
         } else {
-            $response = $this->buildFallbackResponse($subject, $classroomName, $prompt, $insights);
+            $response = $this->buildFallbackResponse($subject, $classroom, $prompt, $insights);
         }
 
         return back()->with('chatbot_response', $response);
@@ -89,7 +92,7 @@ class LecturerChatbotController extends Controller
 
     private function generateOllamaResponse(
         Subject $subject,
-        ?string $classroomName,
+        ?Classroom $classroom,
         string $prompt,
         array $insights
     ): ?string {
@@ -100,6 +103,7 @@ class LecturerChatbotController extends Controller
             return null;
         }
 
+        $classroomName = $classroom?->name;
         $systemPrompt = 'You are a helpful teaching assistant for lecturers. Provide concise, actionable advice in 4-6 sentences.';
         $themesLine = $this->formatList($insights['themes'], 'none yet');
         $issuesLine = $this->formatList($insights['issues'], 'none yet');
@@ -109,8 +113,12 @@ class LecturerChatbotController extends Controller
             $classroomName ? "Classroom: {$classroomName}." : 'Classroom: not specified.',
             $prompt !== '' ? "Lecturer note: {$prompt}." : null,
             $insights['summary'],
+            'Rating distribution (1-5): ' . $this->formatRatingDistribution($insights['ratingDistribution'] ?? []),
+            "Low-rating feedback (1-2 stars): {$insights['lowRatingCount']} ({$insights['lowRatingRatio']}%).",
             "Common themes: {$themesLine}.",
             "Top issues: {$issuesLine}.",
+            'Most frequent bad-comment keywords: ' . $this->formatList($insights['badCommentThemes'] ?? [], 'none yet') . '.',
+            'Worst comments (lowest ratings first): ' . $this->formatList($insights['worstComments'] ?? [], 'none yet', ' | ') . '.',
             "Sample comments: {$highlightsLine}.",
         ])->filter()->implode("\n");
 
@@ -139,13 +147,25 @@ class LecturerChatbotController extends Controller
         return $generated !== '' ? $generated : null;
     }
 
-    private function buildFeedbackInsights(Subject $subject, ?string $classroomName): array
+    private function buildFeedbackInsights(Subject $subject, ?Classroom $classroom): array
     {
         $since = now()->subDays(30);
-        $feedbacks = Feedback::query()
+        $feedbackQuery = Feedback::query()
             ->where('subject', $subject->name)
-            ->where('created_at', '>=', $since)
-            ->get(['rating', 'comments', 'created_at']);
+            ->where('created_at', '>=', $since);
+
+        $classroomName = $classroom?->name;
+        if ($classroom) {
+            $studentIds = $classroom->enrollments()->pluck('student_id');
+
+            if ($studentIds->isEmpty()) {
+                $feedbackQuery->whereRaw('1 = 0');
+            } else {
+                $feedbackQuery->whereIn('user_id', $studentIds->all());
+            }
+        }
+
+        $feedbacks = $feedbackQuery->get(['rating', 'comments', 'created_at']);
 
         if ($feedbacks->isEmpty()) {
             $summary = sprintf(
@@ -153,14 +173,23 @@ class LecturerChatbotController extends Controller
                 $subject->name
             );
 
+            if ($classroomName) {
+                $summary .= " Classroom selected: {$classroomName} (class + subject scoped feedback).";
+            }
+
             return [
                 'summary' => $summary,
                 'themes' => [],
                 'issues' => [],
                 'highlights' => [],
+                'badCommentThemes' => [],
+                'worstComments' => [],
                 'avgRating' => null,
                 'positiveRatio' => 0,
                 'negativeRatio' => 0,
+                'lowRatingCount' => 0,
+                'lowRatingRatio' => 0,
+                'ratingDistribution' => [1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0],
             ];
         }
 
@@ -256,12 +285,24 @@ class LecturerChatbotController extends Controller
         ];
         $allKeywords = [];
         $issueKeywords = [];
+        $badCommentKeywords = [];
         $highlightComments = [];
+        $ratingDistribution = [1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0];
+        $lowRatingCount = 0;
 
         foreach ($feedbacks as $feedback) {
             $comment = trim((string) $feedback->comments);
+            $rating = (int) $feedback->rating;
+            if ($rating >= 1 && $rating <= 5) {
+                $ratingDistribution[$rating]++;
+            }
+
             $sentiment = $this->inferSentiment($feedback->rating, $comment, $positiveKeywords, $negativeKeywords);
             $sentimentCounts[$sentiment]++;
+
+            if ($rating <= 2) {
+                $lowRatingCount++;
+            }
 
             if ($comment !== '') {
                 $highlightComments[] = $comment;
@@ -269,9 +310,10 @@ class LecturerChatbotController extends Controller
                 foreach ($tokens as $token) {
                     $allKeywords[$token] = ($allKeywords[$token] ?? 0) + 1;
                 }
-                if ($sentiment === 'negative') {
+                if ($sentiment === 'negative' || $rating <= 2) {
                     foreach ($tokens as $token) {
                         $issueKeywords[$token] = ($issueKeywords[$token] ?? 0) + 1;
+                        $badCommentKeywords[$token] = ($badCommentKeywords[$token] ?? 0) + 1;
                     }
                 }
             }
@@ -279,27 +321,41 @@ class LecturerChatbotController extends Controller
 
         arsort($allKeywords);
         arsort($issueKeywords);
+        arsort($badCommentKeywords);
 
         $topThemes = array_slice(array_keys($allKeywords), 0, 5);
         $topIssues = array_slice(array_keys($issueKeywords), 0, 5);
+        $topBadCommentThemes = array_slice(array_keys($badCommentKeywords), 0, 5);
         $topHighlights = array_slice($highlightComments, 0, 3);
+        $worstComments = $feedbacks
+            ->filter(fn($feedback) => trim((string) $feedback->comments) !== '')
+            ->sortBy([
+                ['rating', 'asc'],
+                ['created_at', 'desc'],
+            ])
+            ->take(3)
+            ->map(fn($feedback) => trim((string) $feedback->comments))
+            ->values()
+            ->all();
 
         $avgRating = $feedbacks->avg('rating');
         $total = max($feedbacks->count(), 1);
         $positiveRatio = round(($sentimentCounts['positive'] / $total) * 100);
         $negativeRatio = round(($sentimentCounts['negative'] / $total) * 100);
+        $lowRatingRatio = round(($lowRatingCount / $total) * 100);
 
         $summary = sprintf(
-            'Last 30 days: %s feedback items for %s. Avg rating %s/5. %s%% positive, %s%% negative.',
+            'Last 30 days: %s feedback items for %s. Avg rating %s/5. %s%% positive, %s%% negative, %s%% low rating (1-2 stars).',
             $feedbacks->count(),
             $subject->name,
             $avgRating ? number_format($avgRating, 2) : '0.00',
             $positiveRatio,
-            $negativeRatio
+            $negativeRatio,
+            $lowRatingRatio
         );
 
         if ($classroomName) {
-            $summary .= " Classroom selected: {$classroomName} (feedback is per subject).";
+            $summary .= " Classroom selected: {$classroomName} (class + subject scoped feedback).";
         }
 
         return [
@@ -307,27 +363,35 @@ class LecturerChatbotController extends Controller
             'themes' => $topThemes,
             'issues' => $topIssues,
             'highlights' => $topHighlights,
+            'badCommentThemes' => $topBadCommentThemes,
+            'worstComments' => $worstComments,
             'avgRating' => $avgRating,
             'positiveRatio' => $positiveRatio,
             'negativeRatio' => $negativeRatio,
+            'lowRatingCount' => $lowRatingCount,
+            'lowRatingRatio' => $lowRatingRatio,
+            'ratingDistribution' => $ratingDistribution,
         ];
     }
 
     private function buildFallbackResponse(
         Subject $subject,
-        ?string $classroomName,
+        ?Classroom $classroom,
         string $prompt,
         array $insights
     ): string {
         $lines = [
             'Overview',
             "- Subject: {$subject->name}",
-            $classroomName ? "- Class: {$classroomName}" : '- Class: not specified',
+            $classroom ? "- Class: {$classroom->name}" : '- Class: not specified',
             "- {$insights['summary']}",
             '',
             'Themes & Issues',
             '- Common themes: ' . $this->formatList($insights['themes'], 'none yet'),
             '- Top issues: ' . $this->formatList($insights['issues'], 'none yet'),
+            '- Rating distribution (1-5): ' . $this->formatRatingDistribution($insights['ratingDistribution'] ?? []),
+            "- Low-rating feedback (1-2 stars): {$insights['lowRatingCount']} ({$insights['lowRatingRatio']}%)",
+            '- Frequent bad-comment keywords: ' . $this->formatList($insights['badCommentThemes'] ?? [], 'none yet'),
             '',
         ];
 
@@ -344,6 +408,9 @@ class LecturerChatbotController extends Controller
         $lines[] = 'Sample comments';
         $lines[] = '- ' . $this->formatList($insights['highlights'], 'none yet', "\n- ");
         $lines[] = '';
+        $lines[] = 'Lowest-rating comments';
+        $lines[] = '- ' . $this->formatList($insights['worstComments'] ?? [], 'none yet', "\n- ");
+        $lines[] = '';
         $lines[] = $prompt ? "Lecturer note: \"{$prompt}\"." : null;
 
         return collect($lines)->filter(fn($line) => $line !== null)->implode("\n");
@@ -356,6 +423,17 @@ class LecturerChatbotController extends Controller
         }
 
         return implode($separator, $items);
+    }
+
+    private function formatRatingDistribution(array $distribution): string
+    {
+        $normalized = [];
+
+        foreach ([1, 2, 3, 4, 5] as $rating) {
+            $normalized[] = sprintf('%s★:%s', $rating, $distribution[$rating] ?? 0);
+        }
+
+        return implode(', ', $normalized);
     }
 
     private function inferSentiment(int $rating, string $comment, array $positiveKeywords, array $negativeKeywords): string
