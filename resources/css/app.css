@@ -1,3 +1,105 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@layer utilities {
+    .animate-float-slow {
+        animation: float-slow 8s ease-in-out infinite;
+    }
+
+    .animate-float-delayed {
+        animation: float-delayed 10s ease-in-out infinite;
+    }
+
+    .animate-fade-up {
+        animation: fade-up 0.8s ease-out both;
+    }
+
+    .animate-fade-up-delay-1 {
+        animation: fade-up 0.8s ease-out 0.15s both;
+    }
+
+    .animate-fade-up-delay-2 {
+        animation: fade-up 0.8s ease-out 0.3s both;
+    }
+
+    .animate-glow-pulse {
+        animation: glow-pulse 2.8s ease-in-out infinite;
+    }
+
+    .animate-slide-shimmer {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .animate-slide-shimmer::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        transform: translateX(-130%);
+        background: linear-gradient(120deg, transparent 30%, rgba(255, 255, 255, 0.25), transparent 70%);
+        animation: slide-shimmer 3.8s ease-in-out infinite;
+    }
+}
+
+@keyframes float-slow {
+    0%,
+    100% {
+        transform: translateY(0px) scale(1);
+    }
+    50% {
+        transform: translateY(-18px) scale(1.05);
+    }
+}
+
+@keyframes float-delayed {
+    0%,
+    100% {
+        transform: translateY(0px) scale(1);
+    }
+    50% {
+        transform: translateY(12px) scale(0.97);
+    }
+}
+
+@keyframes fade-up {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes glow-pulse {
+    0%,
+    100% {
+        box-shadow: 0 0 0 rgba(255, 255, 255, 0);
+    }
+    50% {
+        box-shadow: 0 0 30px rgba(255, 255, 255, 0.22);
+    }
+}
+
+@keyframes slide-shimmer {
+    0% {
+        transform: translateX(-130%);
+    }
+    45%,
+    100% {
+        transform: translateX(130%);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .animate-float-slow,
+    .animate-float-delayed,
+    .animate-fade-up,
+    .animate-fade-up-delay-1,
+    .animate-fade-up-delay-2,
+    .animate-glow-pulse,
+    .animate-slide-shimmer::after {
+        animation: none !important;
+    }
+}
