@@ -18,20 +18,24 @@
 
                 $ratingPoints = collect($ratingTrendData)->values();
                 $ratingPointCount = max($ratingPoints->count(), 1);
-                $ratingSvgPoints = $ratingPoints->map(function ($value, $index) use ($ratingPointCount) {
-                    $x = $ratingPointCount > 1 ? round(($index / ($ratingPointCount - 1)) * 100, 2) : 50;
-                    $normalized = max(0, min(5, (float) $value));
-                    $y = round(100 - (($normalized / 5) * 100), 2);
+                $ratingSvgPoints = $ratingPoints
+                    ->map(function ($value, $index) use ($ratingPointCount) {
+                        $x = $ratingPointCount > 1 ? round(($index / ($ratingPointCount - 1)) * 100, 2) : 50;
+                        $normalized = max(0, min(5, (float) $value));
+                        $y = round(100 - ($normalized / 5) * 100, 2);
 
-                    return "{$x},{$y}";
-                })->implode(' ');
+                        return "{$x},{$y}";
+                    })
+                    ->implode(' ');
 
-                $sentimentPairs = collect($sentimentTrendLabels)->values()->map(function ($label, $index) use ($sentimentTrendData) {
-                    return [
-                        'label' => $label,
-                        'value' => max(0, min(100, (int) ($sentimentTrendData[$index] ?? 0))),
-                    ];
-                });
+                $sentimentPairs = collect($sentimentTrendLabels)
+                    ->values()
+                    ->map(function ($label, $index) use ($sentimentTrendData) {
+                        return [
+                            'label' => $label,
+                            'value' => max(0, min(100, (int) ($sentimentTrendData[$index] ?? 0))),
+                        ];
+                    });
             @endphp
             <header class="animate-fade-in flex flex-wrap items-center justify-between gap-4">
                 <div>
@@ -96,12 +100,13 @@
                             {{ $ratingMoMChange >= 0 ? '+' : '' }}{{ $ratingMoMChange }}% MoM
                         </span>
                     </div>
-                    <div class="mt-4 h-40 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-950">
+                    <div
+                        class="mt-4 h-40 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-950">
                         @if ($ratingPoints->isNotEmpty() && $ratingPoints->sum() > 0)
                             <svg viewBox="0 0 100 100" class="h-full w-full" preserveAspectRatio="none" role="img"
                                 aria-label="Rating trend graph">
-                                <polyline points="{{ $ratingSvgPoints }}" fill="none" stroke="#6366F1" stroke-width="2.5"
-                                    stroke-linecap="round" stroke-linejoin="round"></polyline>
+                                <polyline points="{{ $ratingSvgPoints }}" fill="none" stroke="#6366F1"
+                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></polyline>
                             </svg>
                         @else
                             <div class="flex h-full items-center justify-center text-xs text-slate-500 dark:text-slate-400">
@@ -130,13 +135,16 @@
                             Needs attention
                         </span>
                     </div>
-                    <div class="mt-4 h-40 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-950">
+                    <div
+                        class="mt-4 h-40 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-950">
                         @if ($sentimentPairs->isNotEmpty())
                             <div class="grid h-full grid-cols-7 items-end gap-2">
                                 @foreach ($sentimentPairs as $item)
                                     <div class="flex h-full flex-col items-center justify-end gap-2">
-                                        <div class="w-full rounded-t bg-orange-500/80" style="height: {{ max($item['value'], 4) }}%"></div>
-                                        <span class="text-[10px] text-slate-500 dark:text-slate-400">{{ $item['label'] }}</span>
+                                        <div class="w-full rounded-t bg-orange-500/80"
+                                            style="height: {{ max($item['value'], 4) }}%"></div>
+                                        <span
+                                            class="text-[10px] text-slate-500 dark:text-slate-400">{{ $item['label'] }}</span>
                                     </div>
                                 @endforeach
                             </div>
@@ -165,9 +173,11 @@
                         @foreach ($issueLabelsValue as $index => $label)
                             @php($issuePercent = max(0, min(100, (int) $issueDataValue->get($index, 0))))
                             <div>
-                                <div class="mb-1 flex items-center justify-between text-sm text-gray-600 dark:text-gray-300">
+                                <div
+                                    class="mb-1 flex items-center justify-between text-sm text-gray-600 dark:text-gray-300">
                                     <span>{{ $label }}</span>
-                                    <span class="font-semibold text-gray-900 dark:text-gray-100">{{ $issuePercent }}%</span>
+                                    <span
+                                        class="font-semibold text-gray-900 dark:text-gray-100">{{ $issuePercent }}%</span>
                                 </div>
                                 <div class="h-2 rounded-full bg-slate-200 dark:bg-slate-700">
                                     <div class="h-2 rounded-full bg-indigo-500" style="width: {{ $issuePercent }}%"></div>
@@ -191,13 +201,22 @@
                     <div>
                         <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Lecturer Chatbot Assistant</h3>
                         <p class="text-sm text-slate-600 dark:text-slate-300">
-                            Get teaching suggestions based on your classes and subjects.
+                            Get teaching suggestions based on your classes, subjects, and feedback statistics.
                         </p>
                     </div>
                     <span
                         class="animate-slide-shimmer inline-flex items-center rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-200">
                         Smart Advice
                     </span>
+                </div>
+                <div
+                    class="mt-4 rounded-lg border px-3 py-2 text-xs {{ $ollamaStatus['connected'] ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-100' : 'border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100' }}">
+                    <p class="font-semibold">Ollama status</p>
+                    <p class="mt-1">{{ $ollamaStatus['message'] }}</p>
+                    @if (!$ollamaStatus['connected'])
+                        <p class="mt-2">Set <code>OLLAMA_BASE_URL</code> and <code>OLLAMA_MODEL</code> in your
+                            <code>.env</code>, then run <code>ollama pull &lt;model&gt;</code>.</p>
+                    @endif
                 </div>
 
                 @if (session('chatbot_response'))

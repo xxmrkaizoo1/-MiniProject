@@ -54,6 +54,7 @@ class LecturerChatbotController extends Controller
             'totalFeedback' => $totalFeedback,
             'negativeRatio' => $negativeRatio,
             'notification' => $notification,
+            'ollamaStatus' => $this->getOllamaStatus(),
         ]);
     }
 
@@ -84,7 +85,13 @@ class LecturerChatbotController extends Controller
         if ($ollamaResponse) {
             $response = $ollamaResponse;
         } else {
-            $response = $this->buildFallbackResponse($subject, $classroom, $prompt, $insights);
+            $status = $this->getOllamaStatus();
+            $fallbackMessage = $this->buildFallbackResponse($subject, $classroom, $prompt, $insights);
+            if (! $status['connected']) {
+                $response = "Ollama is not connected right now ({$status['message']}).\n\n{$fallbackMessage}";
+            } else {
+                $response = $fallbackMessage;
+            }
         }
 
         return back()->with('chatbot_response', $response);
@@ -146,6 +153,51 @@ class LecturerChatbotController extends Controller
         $generated = trim((string) $response->json('response'));
 
         return $generated !== '' ? $generated : null;
+    }
+    private function getOllamaStatus(): array
+    {
+        $baseUrl = rtrim((string) config('services.ollama.base_url'), '/');
+        $model = (string) config('services.ollama.model');
+
+        if ($baseUrl === '' || $model === '') {
+            return [
+                'connected' => false,
+                'message' => 'missing OLLAMA_BASE_URL or OLLAMA_MODEL',
+            ];
+        }
+
+        try {
+            $response = Http::timeout(3)->get("{$baseUrl}/api/tags");
+        } catch (ConnectionException) {
+            return [
+                'connected' => false,
+                'message' => 'cannot reach Ollama server',
+            ];
+        }
+
+        if (! $response->ok()) {
+            return [
+                'connected' => false,
+                'message' => 'Ollama server returned an error',
+            ];
+        }
+
+        $models = collect($response->json('models', []))
+            ->pluck('name')
+            ->filter()
+            ->values();
+
+        if (! $models->contains($model)) {
+            return [
+                'connected' => false,
+                'message' => "model {$model} is not pulled",
+            ];
+        }
+
+        return [
+            'connected' => true,
+            'message' => "connected to {$model}",
+        ];
     }
 
     private function buildFeedbackInsights(Subject $subject, ?Classroom $classroom): array
