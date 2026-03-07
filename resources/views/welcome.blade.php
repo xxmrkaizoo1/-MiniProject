@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -9,125 +8,131 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body class="min-h-screen bg-slate-950 text-white">
+<body class="min-h-screen bg-slate-950 text-white antialiased">
     <div class="relative isolate min-h-screen overflow-hidden">
         <div class="absolute inset-0 -z-10">
-            <div class="animate-float-slow absolute -top-40 right-0 h-80 w-80 rounded-full bg-indigo-500/30 blur-3xl">
-            </div>
-            <div class="animate-float-delayed absolute bottom-0 left-0 h-96 w-96 rounded-full bg-sky-500/20 blur-3xl">
-            </div>
+            <div class="animate-float-slow absolute -top-40 right-0 h-80 w-80 rounded-full bg-indigo-500/35 blur-3xl"></div>
+            <div class="animate-float-delayed absolute bottom-0 left-0 h-96 w-96 rounded-full bg-sky-500/25 blur-3xl"></div>
+            <div class="animate-float-slow absolute left-1/3 top-1/3 h-56 w-56 rounded-full bg-fuchsia-500/15 blur-3xl"></div>
+            <div class="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.06),transparent_40%)]"></div>
         </div>
-        <div class="absolute left-6 top-6 z-10">
-            <a href="{{ url('/') }}" class="inline-flex items-center"
-                aria-label="{{ config('app.name', 'Laravel') }}">
+
+        <div class="pointer-events-none absolute inset-0 -z-10 opacity-30" aria-hidden="true">
+            <div class="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
+        </div>
+
+        <div class="absolute left-6 top-6 z-10 animate-fade-up">
+            <a href="{{ url('/') }}" class="inline-flex items-center" aria-label="{{ config('app.name', 'Laravel') }}">
                 {!! str_replace('<svg ', '<svg class="h-10 w-auto" ', file_get_contents(base_path('logo.svg'))) !!}
             </a>
         </div>
 
         <div class="mx-auto flex min-h-screen max-w-6xl flex-col justify-center px-6 py-16 lg:px-10">
             <div class="grid gap-10 lg:grid-cols-[1.3fr_1fr] lg:items-center">
-                <div class="animate-fade-up space-y-7">
-                    <span
-                        class="animate-slide-shimmer inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-white/80">
+                <section class="animate-fade-up space-y-7">
+                    <span class="animate-slide-shimmer inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-white/90">
                         Student Feedback Portal
                     </span>
-                    <h1 class="text-4xl font-bold tracking-tight sm:text-5xl">
+
+                    <h1 class="bg-gradient-to-r from-white via-sky-200 to-indigo-300 bg-clip-text text-4xl font-bold tracking-tight text-transparent sm:text-5xl">
                         Student Voice Hub
                     </h1>
-                    <p class="text-lg text-white/70">
+
+                    <p class="max-w-2xl text-lg text-white/75">
                         Ruang rasmi pelajar untuk menghantar maklum balas kelas, semak emosi selepas sesi, dan bantu
                         pensyarah bertindak pantas.
                     </p>
+
                     <div class="flex flex-wrap gap-3">
                         @auth
                             @if (Auth::user()->isLecturer())
                                 <a href="{{ url('/dashboard') }}"
-                                    class="animate-glow-pulse inline-flex items-center justify-center rounded-xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-100">
+                                   class="animate-glow-pulse inline-flex items-center justify-center rounded-xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 shadow-sm transition duration-300 hover:-translate-y-1 hover:bg-slate-100">
                                     Dashboard
                                 </a>
                             @elseif (Auth::user()->isStudent())
                                 <a href="{{ url('/feedback') }}"
-                                    class="animate-glow-pulse inline-flex items-center justify-center rounded-xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-100">
+                                   class="animate-glow-pulse inline-flex items-center justify-center rounded-xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 shadow-sm transition duration-300 hover:-translate-y-1 hover:bg-slate-100">
                                     Submit Feedback
                                 </a>
                             @elseif (Auth::user()->isAdmin())
                                 <a href="{{ url('/admin/feedback') }}"
-                                    class="animate-glow-pulse inline-flex items-center justify-center rounded-xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-100">
+                                   class="animate-glow-pulse inline-flex items-center justify-center rounded-xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 shadow-sm transition duration-300 hover:-translate-y-1 hover:bg-slate-100">
                                     Admin Panel
                                 </a>
                             @endif
+
                             <a href="{{ route('profile.edit') }}"
-                                class="inline-flex items-center justify-center rounded-xl border border-white/30 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10">
+                               class="inline-flex items-center justify-center rounded-xl border border-white/30 px-5 py-3 text-sm font-semibold text-white transition duration-300 hover:-translate-y-1 hover:bg-white/10">
                                 Profile
                             </a>
+
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
                                 <button type="submit"
-                                    class="inline-flex items-center justify-center rounded-xl border border-rose-400/60 px-5 py-3 text-sm font-semibold text-rose-200 transition hover:bg-rose-500/20">
+                                        class="inline-flex items-center justify-center rounded-xl border border-rose-400/60 px-5 py-3 text-sm font-semibold text-rose-200 transition duration-300 hover:-translate-y-1 hover:bg-rose-500/20">
                                     Logout
                                 </button>
                             </form>
                         @else
                             <a href="{{ route('login') }}"
-                                class="animate-glow-pulse inline-flex items-center justify-center rounded-xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-100">
+                               class="animate-glow-pulse inline-flex items-center justify-center rounded-xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 shadow-sm transition duration-300 hover:-translate-y-1 hover:bg-slate-100">
                                 Login
                             </a>
+
                             @if (Route::has('register'))
                                 <a href="{{ route('register') }}"
-                                    class="inline-flex items-center justify-center rounded-xl border border-white/30 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10">
+                                   class="inline-flex items-center justify-center rounded-xl border border-white/30 px-5 py-3 text-sm font-semibold text-white transition duration-300 hover:-translate-y-1 hover:bg-white/10">
                                     Register
                                 </a>
                             @endif
                         @endauth
                     </div>
+
                     <div class="animate-fade-up-delay-1 grid gap-3 pt-2 sm:grid-cols-2">
-                        <div
-                            class="rounded-2xl border border-white/10 bg-white/5 p-4 transition duration-300 hover:-translate-y-1 hover:bg-white/10">
+                        <div class="rounded-2xl border border-white/10 bg-white/5 p-4 transition duration-300 hover:-translate-y-1 hover:bg-white/10">
                             <p class="text-xs uppercase tracking-[0.2em] text-white/60">Akses Pelajar</p>
                             <p class="mt-2 text-sm text-white/80">
                                 Hantar rating, mood, dan komen terus selepas kelas untuk tindakan segera.
                             </p>
                         </div>
-                        <div
-                            class="rounded-2xl border border-white/10 bg-white/5 p-4 transition duration-300 hover:-translate-y-1 hover:bg-white/10">
+
+                        <div class="rounded-2xl border border-white/10 bg-white/5 p-4 transition duration-300 hover:-translate-y-1 hover:bg-white/10">
                             <p class="text-xs uppercase tracking-[0.2em] text-white/60">Privasi</p>
                             <p class="mt-2 text-sm text-white/80">
                                 Pilih mod anonim supaya maklum balas lebih terbuka dan selesa.
                             </p>
                         </div>
                     </div>
-                </div>
+                </section>
 
-                <div
-                    class="animate-fade-up-delay-2 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur transition duration-500 hover:-translate-y-1 hover:border-white/20">
+                <section class="animate-fade-up-delay-2 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur transition duration-500 hover:-translate-y-1 hover:border-white/20">
                     <div class="space-y-6">
                         <div>
-                            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-white/60">Ringkasan Cepat
-                            </p>
+                            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-white/60">Ringkasan Cepat</p>
                             <h2 class="mt-2 text-2xl font-semibold text-white">Suara Pelajar, Tindakan Nyata.</h2>
                             <p class="mt-3 text-sm text-white/70">
                                 Serlahkan isu utama kelas anda, kongsi mood selepas sesi, dan bantu pensyarah membuat
                                 penambahbaikan segera.
                             </p>
                         </div>
+
                         <div class="grid gap-3 text-sm text-white/80">
-                            <div
-                                class="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                            <div class="animate-slide-shimmer flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3 transition duration-300 hover:bg-white/10">
                                 <span>1 minit untuk hantar maklum balas</span>
                                 <span class="text-xs uppercase text-white/60">Fast</span>
                             </div>
-                            <div
-                                class="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                            <div class="animate-slide-shimmer flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3 transition duration-300 hover:bg-white/10">
                                 <span>Mood check-in selepas kelas</span>
                                 <span class="text-xs uppercase text-white/60">Mood</span>
                             </div>
-                            <div
-                                class="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                            <div class="animate-slide-shimmer flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3 transition duration-300 hover:bg-white/10">
                                 <span>Analitik khas untuk pensyarah</span>
                                 <span class="text-xs uppercase text-white/60">Insight</span>
                             </div>
                         </div>
-                        <div class="rounded-2xl border border-white/10 bg-white/5 p-4 text-xs text-white/70">
+
+                        <div class="rounded-2xl border border-white/10 bg-white/5 p-4 text-xs text-white/70 transition duration-300 hover:bg-white/10">
                             <p class="text-white/80">Langkah pantas:</p>
                             <ol class="mt-2 list-decimal space-y-1 pl-4">
                                 <li>Pilih subjek kelas anda.</li>
@@ -135,14 +140,14 @@
                                 <li>Tambah komen dan hantar.</li>
                             </ol>
                         </div>
-                        <div class="rounded-2xl bg-white/10 px-4 py-3 text-xs text-white/70">
+
+                        <div class="rounded-2xl bg-white/10 px-4 py-3 text-xs text-white/70 transition duration-300 hover:bg-white/15">
                             Tip: Gunakan butang Profile untuk kemas kini nama &amp; emel anda.
                         </div>
                     </div>
-                </div>
+                </section>
             </div>
         </div>
     </div>
 </body>
-
 </html>
