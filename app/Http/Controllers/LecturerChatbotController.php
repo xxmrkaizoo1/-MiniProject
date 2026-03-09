@@ -7,6 +7,7 @@ use App\Models\Feedback;
 use App\Models\Subject;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
@@ -80,12 +81,14 @@ class LecturerChatbotController extends Controller
         $prompt = $validated['prompt'] ?? '';
         $insights = $this->buildFeedbackInsights($subject, $classroom);
 
-        $ollamaResponse = $this->generateOllamaResponse($subject, $classroom, $prompt, $insights);
+        $status = $this->getOllamaStatus();
+        $ollamaResponse = $status['connected']
+            ? $this->generateOllamaResponse($subject, $classroom, $prompt, $insights)
+            : null;
 
         if ($ollamaResponse) {
             $response = $ollamaResponse;
         } else {
-            $status = $this->getOllamaStatus();
             $fallbackMessage = $this->buildFallbackResponse($subject, $classroom, $prompt, $insights);
             if (! $status['connected']) {
                 $response = "Ollama is not connected right now ({$status['message']}).\n\n{$fallbackMessage}";
@@ -154,6 +157,7 @@ class LecturerChatbotController extends Controller
 
         return $generated !== '' ? $generated : null;
     }
+
     private function getOllamaStatus(): array
     {
         $baseUrl = rtrim((string) config('services.ollama.base_url'), '/');
@@ -166,38 +170,42 @@ class LecturerChatbotController extends Controller
             ];
         }
 
-        try {
-            $response = Http::timeout(3)->get("{$baseUrl}/api/tags");
-        } catch (ConnectionException) {
+        $cacheKey = 'ollama_status_' . md5($baseUrl . '|' . $model);
+
+        return Cache::remember($cacheKey, now()->addSeconds(20), function () use ($baseUrl, $model) {
+            try {
+                $response = Http::timeout(2)->get("{$baseUrl}/api/tags");
+            } catch (ConnectionException) {
+                return [
+                    'connected' => false,
+                    'message' => 'cannot reach Ollama server',
+                ];
+            }
+
+            if (! $response->ok()) {
+                return [
+                    'connected' => false,
+                    'message' => 'Ollama server returned an error',
+                ];
+            }
+
+            $models = collect($response->json('models', []))
+                ->pluck('name')
+                ->filter()
+                ->values();
+
+            if (! $models->contains($model)) {
+                return [
+                    'connected' => false,
+                    'message' => "model {$model} is not pulled",
+                ];
+            }
+
             return [
-                'connected' => false,
-                'message' => 'cannot reach Ollama server',
+                'connected' => true,
+                'message' => "connected to {$model}",
             ];
-        }
-
-        if (! $response->ok()) {
-            return [
-                'connected' => false,
-                'message' => 'Ollama server returned an error',
-            ];
-        }
-
-        $models = collect($response->json('models', []))
-            ->pluck('name')
-            ->filter()
-            ->values();
-
-        if (! $models->contains($model)) {
-            return [
-                'connected' => false,
-                'message' => "model {$model} is not pulled",
-            ];
-        }
-
-        return [
-            'connected' => true,
-            'message' => "connected to {$model}",
-        ];
+        });
     }
 
     private function buildFeedbackInsights(Subject $subject, ?Classroom $classroom): array

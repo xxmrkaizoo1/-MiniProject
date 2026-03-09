@@ -270,10 +270,10 @@ class LecturerDashboardController extends Controller
         $prompt = $validated['prompt'] ?? '';
         $insights = $this->buildFeedbackInsights($subject, $classroomName);
 
-        $ollamaResponse = $this->generateOllamaResponse($subject, $classroomName, $prompt, $insights);
+        $ollamaStatus = $this->generateOllamaResponse($subject, $classroomName, $prompt, $insights);
 
-        if ($ollamaResponse) {
-            $response = $ollamaResponse;
+        if ($ollamaStatus) {
+            $response = $ollamaStatus;
         } else {
             $response = $this->buildFallbackResponse($subject, $classroomName, $prompt, $insights);
         }
@@ -591,6 +591,11 @@ class LecturerDashboardController extends Controller
 
         return "Focus areas: {$issuesLine}. {$action}";
     }
+
+
+
+
+
 
     private function buildActionPlanFromInsights(array $insights, string $lecturerNote): string
     {
