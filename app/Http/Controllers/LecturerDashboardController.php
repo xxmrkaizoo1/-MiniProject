@@ -8,6 +8,7 @@ use App\Models\Subject;
 use Carbon\Carbon;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
@@ -180,9 +181,28 @@ class LecturerDashboardController extends Controller
         $weeklyPositiveRate = $weeklyTotal > 0 ? round(($weeklyPositive / $weeklyTotal) * 100) : 0;
 
         $issueCategories = [
-            'Wi-Fi' => ['wifi', 'wi-fi', 'internet', 'connection', 'connectivity'],
-            'Projector' => ['projector', 'projek', 'proyektor', 'display', 'screen'],
-            'LMS' => ['lms', 'portal', 'login', 'sync', 'synchronization', 'sinkron'],
+                   'Wi-Fi' => [
+                'wifi',
+                'wi-fi',
+                'wi fi',
+                'internet',
+                'connection',
+                'connectivity',
+                'network',
+                'hotspot',
+                'router',
+            ],
+            'Projector' => [
+                'projector',
+                'projek',
+                'proyektor',
+                'display',
+                'screen',
+                'lcd',
+                'hdmi',
+                'slide',
+                'slides',
+            ],
         ];
 
         $issueCounts = array_fill_keys(array_keys($issueCategories), 0);
@@ -248,6 +268,7 @@ class LecturerDashboardController extends Controller
             'issueLabels' => $issuePercentages->keys()->values(),
             'issueData' => $issuePercentages->values(),
             'focusAreaAdvice' => $focusAreaAdvice,
+            'ollamaStatus' => $this->getOllamaStatus(),
         ]);
     }
 
@@ -332,6 +353,57 @@ class LecturerDashboardController extends Controller
         $generated = trim((string) $response->json('response'));
 
         return $generated !== '' ? $generated : null;
+    }
+
+
+    private function getOllamaStatus(): array
+    {
+        $baseUrl = rtrim((string) config('services.ollama.base_url'), '/');
+        $model = (string) config('services.ollama.model');
+
+        if ($baseUrl === '' || $model === '') {
+            return [
+                'connected' => false,
+                'message' => 'missing OLLAMA_BASE_URL or OLLAMA_MODEL',
+            ];
+        }
+
+        $cacheKey = 'ollama_status_' . md5($baseUrl . '|' . $model);
+
+        return Cache::remember($cacheKey, now()->addSeconds(20), function () use ($baseUrl, $model) {
+            try {
+                $response = Http::timeout(2)->get("{$baseUrl}/api/tags");
+            } catch (ConnectionException) {
+                return [
+                    'connected' => false,
+                    'message' => 'cannot reach Ollama server',
+                ];
+            }
+
+            if (! $response->ok()) {
+                return [
+                    'connected' => false,
+                    'message' => 'Ollama server returned an error',
+                ];
+            }
+
+            $models = collect($response->json('models', []))
+                ->pluck('name')
+                ->filter()
+                ->values();
+
+            if (! $models->contains($model)) {
+                return [
+                    'connected' => false,
+                    'message' => "model {$model} is not pulled",
+                ];
+            }
+
+            return [
+                'connected' => true,
+                'message' => "connected to {$model}",
+            ];
+        });
     }
 
     private function buildFeedbackInsights(Subject $subject, ?string $classroomName): array
