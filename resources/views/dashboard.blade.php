@@ -15,6 +15,10 @@
                 $issueLabelsValue = collect($issueLabels ?? []);
                 $issueDataValue = collect($issueData ?? []);
                 $focusAreaAdvice = $focusAreaAdvice ?? null;
+                $ollamStatus  = $ollamaStatus ??[
+                    'connected'  => false,
+                    'message' => 'Ollama not configured',
+                ];
 
                 $ratingPoints = collect($ratingTrendData)->values();
                 $ratingPointCount = max($ratingPoints->count(), 1);
