@@ -177,7 +177,7 @@ class LecturerChatbotController extends Controller
             return null;
         }
 
-        if (! $response->ok()) {
+        if (! $generateResponse->ok()) {
             return null;
         }
 
