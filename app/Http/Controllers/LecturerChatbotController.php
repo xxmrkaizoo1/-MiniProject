@@ -170,14 +170,13 @@ class LecturerChatbotController extends Controller
             ],
         ];
 
-
         try {
             $generationResponse = Http::timeout($timeout)->post("{$baseUrl}/api/generate", $generatePayload);
         } catch (ConnectionException) {
             return null;
         }
 
-        if (! $generateResponse->ok()) {
+        if (! $generationResponse->ok()) {
             return null;
         }
 
@@ -210,7 +209,7 @@ class LecturerChatbotController extends Controller
                 ];
             }
 
-            if (! $generationResponse->ok()) {
+            if (! $tagsResponse->ok()) {
                 return [
                     'connected' => false,
                     'message' => 'Ollama server returned an error',
@@ -498,6 +497,7 @@ class LecturerChatbotController extends Controller
 
         return collect($lines)->filter(fn($line) => $line !== null)->implode("\n");
     }
+
     private function buildActionPlanFromInsights(array $insights, string $lecturerNote): string
     {
         $actions = [];

@@ -32,6 +32,11 @@ Route::middleware(['auth', 'admin'])->group(function () {
 Route::get('/dashboard', [LecturerDashboardController::class, 'dashboard'])->middleware(['auth', 'verified'])
     ->name('dashboard');
 
+Route::get('/lecturer/chatbot', [LecturerChatbotController::class, 'dashboard'])
+    ->middleware(['auth', 'verified'])
+    ->name('lecturer.chatbot.index');
+
+
 Route::post('/lecturer/chatbot', [LecturerChatbotController::class, 'respond'])
     ->middleware(['auth', 'verified'])
     ->name('lecturer.chatbot.respond');
