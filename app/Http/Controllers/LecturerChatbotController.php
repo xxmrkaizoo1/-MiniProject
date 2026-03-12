@@ -172,7 +172,7 @@ class LecturerChatbotController extends Controller
 
 
         try {
-            $generateResponse = Http::timeout($timeout)->post("{$baseUrl}/api/generate", $generatePayload);
+            $generationResponse = Http::timeout($timeout)->post("{$baseUrl}/api/generate", $generatePayload);
         } catch (ConnectionException) {
             return null;
         }
@@ -181,7 +181,7 @@ class LecturerChatbotController extends Controller
             return null;
         }
 
-        $generated = trim((string) ($generateResponse->json('response') ?? $generateResponse->json('message.content')));
+        $generated = trim((string) ($generationResponse->json('response') ?? $generationResponse->json('message.content')));
 
         return $generated !== '' ? $generated : null;
     }
@@ -202,7 +202,7 @@ class LecturerChatbotController extends Controller
 
         return Cache::remember($cacheKey, now()->addSeconds(20), function () use ($baseUrl, $model) {
             try {
-                $response = Http::timeout(2)->get("{$baseUrl}/api/tags");
+                $tagsResponse = Http::timeout(2)->get("{$baseUrl}/api/tags");
             } catch (ConnectionException) {
                 return [
                     'connected' => false,
@@ -210,14 +210,14 @@ class LecturerChatbotController extends Controller
                 ];
             }
 
-            if (! $generateResponse->ok()) {
+            if (! $generationResponse->ok()) {
                 return [
                     'connected' => false,
                     'message' => 'Ollama server returned an error',
                 ];
             }
 
-            $models = collect($response->json('models', []))
+            $models = collect($tagsResponse->json('models', []))
                 ->pluck('name')
                 ->filter()
                 ->values();
