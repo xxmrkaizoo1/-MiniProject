@@ -133,18 +133,46 @@ class LecturerChatbotController extends Controller
             "Sample comments: {$highlightsLine}.",
         ])->filter()->implode("\n");
 
-        $payload = [
+        $temperature = (float) config('services.ollama.temperature', 0.4);
+        $timeout = max((int) config('services.ollama.timeout', 10), 30);
+
+        $chatPayload = [
+            'model' => $model,
+            'messages' => [
+                ['role' => 'system', 'content' => $systemPrompt],
+                ['role' => 'user', 'content' => $context],
+            ],
+            'stream' => false,
+            'options' => [
+                'temperature' => $temperature,
+            ],
+        ];
+
+        try {
+            $chatResponse = Http::timeout($timeout)->post("{$baseUrl}/api/chat", $chatPayload);
+
+            if ($chatResponse->ok()) {
+                $chatText = trim((string) ($chatResponse->json('message.content') ?? $chatResponse->json('response')));
+                if ($chatText !== '') {
+                    return $chatText;
+                }
+            }
+        } catch (ConnectionException) {
+            return null;
+        }
+
+        $generatePayload = [
             'model' => $model,
             'prompt' => "{$systemPrompt}\n{$context}",
             'stream' => false,
             'options' => [
-                'temperature' => (float) config('services.ollama.temperature', 0.4),
+                'temperature' => $temperature,
             ],
         ];
 
-        $timeout = (int) config('services.ollama.timeout', 10);
+
         try {
-            $response = Http::timeout($timeout)->post("{$baseUrl}/api/generate", $payload);
+            $generateResponse = Http::timeout($timeout)->post("{$baseUrl}/api/generate", $generatePayload);
         } catch (ConnectionException) {
             return null;
         }
@@ -153,7 +181,7 @@ class LecturerChatbotController extends Controller
             return null;
         }
 
-        $generated = trim((string) $response->json('response'));
+        $generated = trim((string) ($generateResponse->json('response') ?? $generateResponse->json('message.content')));
 
         return $generated !== '' ? $generated : null;
     }
@@ -182,7 +210,7 @@ class LecturerChatbotController extends Controller
                 ];
             }
 
-            if (! $response->ok()) {
+            if (! $generateResponse->ok()) {
                 return [
                     'connected' => false,
                     'message' => 'Ollama server returned an error',

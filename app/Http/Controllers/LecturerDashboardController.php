@@ -181,7 +181,7 @@ class LecturerDashboardController extends Controller
         $weeklyPositiveRate = $weeklyTotal > 0 ? round(($weeklyPositive / $weeklyTotal) * 100) : 0;
 
         $issueCategories = [
-                   'Wi-Fi' => [
+            'Wi-Fi' => [
                 'wifi',
                 'wi-fi',
                 'wi fi',
@@ -330,31 +330,58 @@ class LecturerDashboardController extends Controller
             "Sample comments: {$highlightsLine}.",
         ])->filter()->implode("\n");
 
-        $payload = [
+        $temperature = (float) config('services.ollama.temperature', 0.4);
+        $timeout = max((int) config('services.ollama.timeout', 10), 30);
+
+        $chatPayload = [
             'model' => $model,
-            'prompt' => "{$systemPrompt}\n{$context}",
+            'messages' => [
+                ['role' => 'system', 'content' => $systemPrompt],
+                ['role' => 'user', 'content' => $context],
+            ],
             'stream' => false,
             'options' => [
-                'temperature' => (float) config('services.ollama.temperature', 0.4),
+                'temperature' => $temperature,
             ],
         ];
 
-        $timeout = (int) config('services.ollama.timeout', 10);
         try {
-            $response = Http::timeout($timeout)->post("{$baseUrl}/api/generate", $payload);
+            $chatResponse = Http::timeout($timeout)->post("{$baseUrl}/api/chat", $chatPayload);
+
+            if ($chatResponse->ok()) {
+                $chatText = trim((string) ($chatResponse->json('message.content') ?? $chatResponse->json('response')));
+                if ($chatText !== '') {
+                    return $chatText;
+                }
+            }
         } catch (ConnectionException) {
             return null;
         }
 
-        if (! $response->ok()) {
+        $generatePayload = [
+            'model' => $model,
+            'prompt' => "{$systemPrompt}\n{$context}",
+            'stream' => false,
+            'options' => [
+                'temperature' => $temperature,
+            ],
+        ];
+
+
+        try {
+            $generateResponse = Http::timeout($timeout)->post("{$baseUrl}/api/generate", $generatePayload);
+        } catch (ConnectionException) {
             return null;
         }
 
-        $generated = trim((string) $response->json('response'));
+        if (! $generateResponse->ok()) {
+            return null;
+        }
+
+        $generated = trim((string) ($generateResponse->json('response') ?? $generateResponse->json('message.content')));
 
         return $generated !== '' ? $generated : null;
     }
-
 
     private function getOllamaStatus(): array
     {
@@ -658,7 +685,7 @@ class LecturerDashboardController extends Controller
 
         $action = 'Action: Schedule a quick check-in and clarify expectations next class.';
         if ($negativeRatio >= 30) {
-            $action = 'Action: Prioritize the top issue areas, slow the pacing slightly, and add a short recap to confirm understanding.';
+            $action = 'Saya akan memberi fokus kepada isu-isu yang paling kritikal terlebih dahulu sebelum membincangkan perkara sampingan';
         }
 
         return "Focus areas: {$issuesLine}. {$action}";
