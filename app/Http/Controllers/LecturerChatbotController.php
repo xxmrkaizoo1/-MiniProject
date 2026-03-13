@@ -82,14 +82,18 @@ class LecturerChatbotController extends Controller
         $insights = $this->buildFeedbackInsights($subject, $classroom);
 
         $status = $this->getOllamaStatus();
-        $ollamaResponse = $status['connected']
-            ? $this->generateOllamaResponse($subject, $classroom, $prompt, $insights)
-            : null;
+        $ollamaResponse = null;
+        $ollamaActionAdvice = null;
+
+        if ($status['connected']) {
+            $ollamaResponse = $this->generateOllamaResponse($subject, $classroom, $prompt, $insights);
+            $ollamaActionAdvice = $this->generateOllamaActionAdvice($subject, $classroom, $prompt, $insights);
+        }
 
         if ($ollamaResponse) {
             $response = $ollamaResponse;
         } else {
-            $fallbackMessage = $this->buildFallbackResponse($subject, $classroom, $prompt, $insights);
+            $fallbackMessage = $this->buildFallbackResponse($subject, $classroom, $prompt, $insights, $ollamaActionAdvice);
             if (! $status['connected']) {
                 $response = "Ollama is not connected right now ({$status['message']}).\n\n{$fallbackMessage}";
             } else {
@@ -114,7 +118,7 @@ class LecturerChatbotController extends Controller
         }
 
         $classroomName = $classroom?->name;
-        $systemPrompt = 'You are a helpful teaching assistant for lecturers. Use lecturer notes + feedback statistics as primary evidence. Provide concise, actionable advice in 4-6 sentences with priorities.';
+        $systemPrompt = 'You are a helpful teaching assistant for lecturers. Use only the provided lecturer note, selected class/subject context, and feedback statistics/comments as evidence. Respond in Markdown with exactly these sections: Overview, Themes & Issues, Action. In Action, provide 3-5 prioritized actions that are directly grounded in the provided statistics/reviews.';
         $themesLine = $this->formatList($insights['themes'], 'none yet');
         $issuesLine = $this->formatList($insights['issues'], 'none yet');
         $highlightsLine = $this->formatList($insights['highlights'], 'none yet', ' | ');
@@ -129,7 +133,7 @@ class LecturerChatbotController extends Controller
             "Top issues: {$issuesLine}.",
             'Most frequent bad-comment keywords: ' . $this->formatList($insights['badCommentThemes'] ?? [], 'none yet') . '.',
             'Worst comments (lowest ratings first): ' . $this->formatList($insights['worstComments'] ?? [], 'none yet', ' | ') . '.',
-            'Priority action plan (notes + stats): ' . $this->buildActionPlanFromInsights($insights, $prompt) . '.',
+
             "Sample comments: {$highlightsLine}.",
         ])->filter()->implode("\n");
 
@@ -184,6 +188,58 @@ class LecturerChatbotController extends Controller
 
         return $generated !== '' ? $generated : null;
     }
+    private function generateOllamaActionAdvice(
+        Subject $subject,
+        ?Classroom $classroom,
+        string $prompt,
+        array $insights
+    ): ?string {
+        $baseUrl = rtrim((string) config('services.ollama.base_url'), '/');
+        $model = (string) config('services.ollama.model');
+
+        if ($baseUrl === '' || $model === '') {
+            return null;
+        }
+
+        $classroomName = $classroom?->name ?? 'not specified';
+        $context = collect([
+            "Subject: {$subject->name}.",
+            "Classroom: {$classroomName}.",
+            $prompt !== '' ? "Lecturer note: {$prompt}." : null,
+            $insights['summary'] ?? null,
+            'Rating distribution (1-5): ' . $this->formatRatingDistribution($insights['ratingDistribution'] ?? []),
+            "Low-rating feedback (1-2 stars): {$insights['lowRatingCount']} ({$insights['lowRatingRatio']}%).",
+            'Top issues: ' . $this->formatList($insights['issues'] ?? [], 'none yet') . '.',
+            'Frequent bad-comment keywords: ' . $this->formatList($insights['badCommentThemes'] ?? [], 'none yet') . '.',
+            'Worst comments: ' . $this->formatList($insights['worstComments'] ?? [], 'none yet', ' | ') . '.',
+        ])->filter()->implode("\n");
+
+        $temperature = (float) config('services.ollama.temperature', 0.4);
+        $timeout = max((int) config('services.ollama.timeout', 10), 30);
+        $actionPrompt = "Based only on this evidence, write an Action section for a lecturer with 3-5 prioritized bullet points. Keep each bullet specific and practical.\n\n{$context}";
+
+        try {
+            $actionResponse = Http::timeout($timeout)->post("{$baseUrl}/api/generate", [
+                'model' => $model,
+                'prompt' => $actionPrompt,
+                'stream' => false,
+                'options' => [
+                    'temperature' => $temperature,
+                ],
+            ]);
+        } catch (ConnectionException) {
+            return null;
+        }
+
+        if (! $actionResponse->ok()) {
+            return null;
+        }
+
+        $actionText = trim((string) ($actionResponse->json('response') ?? $actionResponse->json('message.content')));
+
+        return $actionText !== '' ? $actionText : null;
+    }
+
 
     private function getOllamaStatus(): array
     {
@@ -466,7 +522,8 @@ class LecturerChatbotController extends Controller
         Subject $subject,
         ?Classroom $classroom,
         string $prompt,
-        array $insights
+        array $insights,
+        ?string $ollamaActionAdvice = null
     ): string {
         $lines = [
             'Overview',
@@ -483,9 +540,9 @@ class LecturerChatbotController extends Controller
             '',
         ];
 
-        $action = $this->buildActionPlanFromInsights($insights, $prompt);
+        $action = $ollamaActionAdvice ?: $this->buildActionPlanFromInsights($insights, $prompt);
         $lines[] = 'Action';
-        $lines[] = "- {$action}";
+        $lines[] = Str::startsWith(ltrim($action), '-') ? $action : "- {$action}";
         $lines[] = '';
         $lines[] = 'Sample comments';
         $lines[] = '- ' . $this->formatList($insights['highlights'], 'none yet', "\n- ");
