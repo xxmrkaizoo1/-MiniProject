@@ -141,8 +141,7 @@ class LecturerChatbotController extends Controller
             'Worst comments (lowest ratings first): ' . $this->formatList($insights['worstComments'] ?? [], 'none yet', ' | ') . '.',
 
             "Sample comments: {$highlightsLine}.",
-        ])->filter()->implode("
-");
+        ])->filter()->implode("\n");
 
         $temperature = (float) config('services.ollama.temperature', 0.4);
         $timeout = max((int) config('services.ollama.timeout', 10), 30);
@@ -200,7 +199,7 @@ class LecturerChatbotController extends Controller
         ?Classroom $classroom,
         string $prompt,
         array $insights
-    ): ?string {
+    ) {
         $baseUrl = rtrim((string) config('services.ollama.base_url'), '/');
         $model = (string) config('services.ollama.model');
 
@@ -224,9 +223,7 @@ class LecturerChatbotController extends Controller
         $temperature = (float) config('services.ollama.temperature', 0.4);
         $timeout = max((int) config('services.ollama.timeout', 10), 30);
         $systemPrompt = 'You are a teaching assistant. Output only the Action section as 3-5 prioritized bullet points based strictly on the evidence.';
-        $actionPrompt = "Based only on this evidence, write an Action section for a lecturer with 3-5 prioritized bullet points. Keep each bullet specific and practical.
-
-    {$context}";
+        $actionPrompt = "Based only on this evidence, write an Action section for a lecturer with 3-5 prioritized bullet points. Keep each bullet specific and practical.\n\n{$context}";
 
         try {
             $chatResponse = Http::timeout($timeout)->post("{$baseUrl}/api/chat", [
@@ -253,8 +250,7 @@ class LecturerChatbotController extends Controller
         try {
             $actionResponse = Http::timeout($timeout)->post("{$baseUrl}/api/generate", [
                 'model' => $model,
-                'prompt' => "{$systemPrompt}
-            {$actionPrompt}",
+                'prompt' => "{$systemPrompt}\n{$actionPrompt}",
                 'stream' => false,
                 'options' => [
                     'temperature' => $temperature,
