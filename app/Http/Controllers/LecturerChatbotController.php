@@ -150,6 +150,8 @@ class LecturerChatbotController extends Controller
         $temperature = (float) config('services.ollama.temperature', 0.4);
         $timeout = max((int) config('services.ollama.timeout', 10), 30);
 
+        $chatError = null;
+
         try {
             $chatResponse = Http::timeout($timeout)->post("{$baseUrl}/api/chat", [
                 'model' => $model,
@@ -168,9 +170,13 @@ class LecturerChatbotController extends Controller
                 if ($chatText !== '') {
                     return ['text' => $chatText, 'error' => null];
                 }
+
+                $chatError = 'Ollama /api/chat returned empty response';
+            } else {
+                $chatError = 'Ollama /api/chat returned HTTP ' . $chatResponse->status();
             }
         } catch (ConnectionException) {
-            return ['text' => null, 'error' => 'cannot reach Ollama /api/chat'];
+            $chatError = 'cannot reach Ollama /api/chat';
         }
 
         try {
@@ -183,16 +189,16 @@ class LecturerChatbotController extends Controller
                 ],
             ]);
         } catch (ConnectionException) {
-            return ['text' => null, 'error' => 'cannot reach Ollama /api/generate'];
+            return ['text' => null, 'error' => (($chatError ? $chatError . '; ' : '') . 'cannot reach Ollama /api/generate')];
         }
 
         if (! $generationResponse->ok()) {
-            return ['text' => null, 'error' => 'Ollama /api/generate returned HTTP ' . $generationResponse->status()];
+            return ['text' => null, 'error' => (($chatError ? $chatError . '; ' : '') . 'Ollama /api/generate returned HTTP ' . $generationResponse->status())];
         }
 
         $generated = trim((string) ($generationResponse->json('response') ?? $generationResponse->json('message.content')));
         if ($generated === '') {
-            return ['text' => null, 'error' => 'Ollama returned an empty main response'];
+            return ['text' => null, 'error' => (($chatError ? $chatError . '; ' : '') . 'Ollama returned an empty main response')];
         }
 
         return ['text' => $generated, 'error' => null];
@@ -230,6 +236,8 @@ class LecturerChatbotController extends Controller
         $systemPrompt = 'You are a teaching assistant. Output only the Action section as 3-5 prioritized bullet points based strictly on the evidence.';
         $actionPrompt = "Based only on this evidence, write an Action section for a lecturer with 3-5 prioritized bullet points. Keep each bullet specific and practical.\n\n{$context}";
 
+        $chatError = null;
+
         try {
             $chatResponse = Http::timeout($timeout)->post("{$baseUrl}/api/chat", [
                 'model' => $model,
@@ -248,9 +256,13 @@ class LecturerChatbotController extends Controller
                 if ($chatText !== '') {
                     return ['text' => $chatText, 'error' => null];
                 }
+
+                $chatError = 'Ollama /api/chat returned empty Action response';
+            } else {
+                $chatError = 'Ollama /api/chat returned HTTP ' . $chatResponse->status();
             }
         } catch (ConnectionException) {
-            return ['text' => null, 'error' => 'cannot reach Ollama for Action generation'];
+            $chatError = 'cannot reach Ollama for Action generation';
         }
 
         try {
@@ -263,17 +275,17 @@ class LecturerChatbotController extends Controller
                 ],
             ]);
         } catch (ConnectionException) {
-            return ['text' => null, 'error' => 'cannot reach Ollama /api/generate for Action generation'];
+            return ['text' => null, 'error' => (($chatError ? $chatError . '; ' : '') . 'cannot reach Ollama /api/generate for Action generation')];
         }
 
         if (! $actionResponse->ok()) {
-            return ['text' => null, 'error' => 'Ollama /api/generate returned HTTP ' . $actionResponse->status()];
+            return ['text' => null, 'error' => (($chatError ? $chatError . '; ' : '') . 'Ollama /api/generate returned HTTP ' . $actionResponse->status())];
         }
 
         $actionText = trim((string) ($actionResponse->json('response') ?? $actionResponse->json('message.content')));
 
         if ($actionText === '') {
-            return ['text' => null, 'error' => 'Ollama returned an empty Action response'];
+            return ['text' => null, 'error' => (($chatError ? $chatError . '; ' : '') . 'Ollama returned an empty Action response')];
         }
 
         return ['text' => $actionText, 'error' => null];
