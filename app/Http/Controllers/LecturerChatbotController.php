@@ -88,12 +88,15 @@ class LecturerChatbotController extends Controller
         if ($status['connected']) {
             $ollamaResponse = $this->generateOllamaResponse($subject, $classroom, $prompt, $insights);
             $ollamaActionAdvice = $this->generateOllamaActionAdvice($subject, $classroom, $prompt, $insights);
+            if ($ollamaResponse && $ollamaActionAdvice) {
+                $ollamaResponse = $this->injectActionAdviceIntoResponse($ollamaResponse, $ollamaActionAdvice);
+            }
         }
 
         if ($ollamaResponse) {
             $response = $ollamaResponse;
         } else {
-            $fallbackMessage = $this->buildFallbackResponse($subject, $classroom, $prompt, $insights, $ollamaActionAdvice);
+            $fallbackMessage = $this->buildFallbackResponse($subject, $classroom, $prompt, $insights, $ollamaActionAdvice, $status['connected']);
             if (! $status['connected']) {
                 $response = "Ollama is not connected right now ({$status['message']}).\n\n{$fallbackMessage}";
             } else {
@@ -523,7 +526,8 @@ class LecturerChatbotController extends Controller
         ?Classroom $classroom,
         string $prompt,
         array $insights,
-        ?string $ollamaActionAdvice = null
+        ?string $ollamaActionAdvice = null,
+        bool $ollamaConnected = false
     ): string {
         $lines = [
             'Overview',
@@ -540,7 +544,11 @@ class LecturerChatbotController extends Controller
             '',
         ];
 
-        $action = $ollamaActionAdvice ?: $this->buildActionPlanFromInsights($insights, $prompt);
+        if ($ollamaConnected) {
+            $action = $ollamaActionAdvice ?? '- Ollama action advice is temporarily unavailable. Please try Generate Advice again.';
+        } else {
+            $action = $this->buildActionPlanFromInsights($insights, $prompt);
+        }
         $lines[] = 'Action';
         $lines[] = Str::startsWith(ltrim($action), '-') ? $action : "- {$action}";
         $lines[] = '';
@@ -554,6 +562,24 @@ class LecturerChatbotController extends Controller
 
         return collect($lines)->filter(fn($line) => $line !== null)->implode("\n");
     }
+    private function injectActionAdviceIntoResponse(string $response, string $actionAdvice): string
+    {
+        $normalizedAction = trim($actionAdvice);
+        if ($normalizedAction === '') {
+            return $response;
+        }
+
+        $actionBlock = "Action
+" . (Str::startsWith(ltrim($normalizedAction), '-') ? $normalizedAction : "- {$normalizedAction}");
+        $pattern = '/(^|\n)Action\s*(\n|\r\n)(.*?)(?=\n\s*(Sample comments|Lowest-rating comments|Lecturer note:|$))/si';
+
+        if (preg_match($pattern, $response)) {
+            return preg_replace($pattern, "\n{$actionBlock}\n", $response, 1) ?? $response;
+        }
+
+        return rtrim($response) . "\n\n{$actionBlock}";
+    }
+
 
     private function buildActionPlanFromInsights(array $insights, string $lecturerNote): string
     {
