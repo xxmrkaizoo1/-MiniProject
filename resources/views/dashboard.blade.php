@@ -15,8 +15,8 @@
                 $issueLabelsValue = collect($issueLabels ?? []);
                 $issueDataValue = collect($issueData ?? []);
                 $focusAreaAdvice = $focusAreaAdvice ?? null;
-                $ollamStatus  = $ollamaStatus ??[
-                    'connected'  => false,
+                $ollamStatus = $ollamaStatus ?? [
+                    'connected' => false,
                     'message' => 'Ollama not configured',
                 ];
 
@@ -219,7 +219,8 @@
                     <p class="mt-1">{{ $ollamaStatus['message'] }}</p>
                     @if (!$ollamaStatus['connected'])
                         <p class="mt-2">Set <code>OLLAMA_BASE_URL</code> and <code>OLLAMA_MODEL</code> in your
-                            <code>.env</code>, then run <code>ollama pull &lt;model&gt;</code>.</p>
+                            <code>.env</code>, then run <code>ollama pull &lt;model&gt;</code>.
+                        </p>
                     @endif
                 </div>
 

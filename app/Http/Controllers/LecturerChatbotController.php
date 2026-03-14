@@ -84,10 +84,13 @@ class LecturerChatbotController extends Controller
         $status = $this->getOllamaStatus();
         $ollamaResponse = null;
         $ollamaActionAdvice = null;
+        $ollamaActionError = null;
 
         if ($status['connected']) {
             $ollamaResponse = $this->generateOllamaResponse($subject, $classroom, $prompt, $insights);
-            $ollamaActionAdvice = $this->generateOllamaActionAdvice($subject, $classroom, $prompt, $insights);
+            $actionResult = $this->generateOllamaActionAdvice($subject, $classroom, $prompt, $insights);
+            $ollamaActionAdvice = $actionResult['text'];
+            $ollamaActionError = $actionResult['error'];
             if ($ollamaResponse && $ollamaActionAdvice) {
                 $ollamaResponse = $this->injectActionAdviceIntoResponse($ollamaResponse, $ollamaActionAdvice);
             }
@@ -96,7 +99,7 @@ class LecturerChatbotController extends Controller
         if ($ollamaResponse) {
             $response = $ollamaResponse;
         } else {
-            $fallbackMessage = $this->buildFallbackResponse($subject, $classroom, $prompt, $insights, $ollamaActionAdvice, $status['connected']);
+            $fallbackMessage = $this->buildFallbackResponse($subject, $classroom, $prompt, $insights, $ollamaActionAdvice, $status['connected'], $ollamaActionError);
             if (! $status['connected']) {
                 $response = "Ollama is not connected right now ({$status['message']}).\n\n{$fallbackMessage}";
             } else {
@@ -112,12 +115,12 @@ class LecturerChatbotController extends Controller
         ?Classroom $classroom,
         string $prompt,
         array $insights
-    ): ?string {
+    ): array {
         $baseUrl = rtrim((string) config('services.ollama.base_url'), '/');
         $model = (string) config('services.ollama.model');
 
         if ($baseUrl === '' || $model === '') {
-            return null;
+            return ['text' => null, 'error' => 'missing OLLAMA_BASE_URL or OLLAMA_MODEL'];
         }
 
         $classroomName = $classroom?->name;
@@ -138,7 +141,8 @@ class LecturerChatbotController extends Controller
             'Worst comments (lowest ratings first): ' . $this->formatList($insights['worstComments'] ?? [], 'none yet', ' | ') . '.',
 
             "Sample comments: {$highlightsLine}.",
-        ])->filter()->implode("\n");
+        ])->filter()->implode("
+");
 
         $temperature = (float) config('services.ollama.temperature', 0.4);
         $timeout = max((int) config('services.ollama.timeout', 10), 30);
@@ -219,28 +223,58 @@ class LecturerChatbotController extends Controller
 
         $temperature = (float) config('services.ollama.temperature', 0.4);
         $timeout = max((int) config('services.ollama.timeout', 10), 30);
-        $actionPrompt = "Based only on this evidence, write an Action section for a lecturer with 3-5 prioritized bullet points. Keep each bullet specific and practical.\n\n{$context}";
+        $systemPrompt = 'You are a teaching assistant. Output only the Action section as 3-5 prioritized bullet points based strictly on the evidence.';
+        $actionPrompt = "Based only on this evidence, write an Action section for a lecturer with 3-5 prioritized bullet points. Keep each bullet specific and practical.
 
+    {$context}";
+
+        try {
+            $chatResponse = Http::timeout($timeout)->post("{$baseUrl}/api/chat", [
+                'model' => $model,
+                'messages' => [
+                    ['role' => 'system', 'content' => $systemPrompt],
+                    ['role' => 'user', 'content' => $actionPrompt],
+                ],
+                'stream' => false,
+                'options' => [
+                    'temperature' => $temperature,
+                ],
+            ]);
+
+            if ($chatResponse->ok()) {
+                $chatText = trim((string) ($chatResponse->json('message.content') ?? $chatResponse->json('response')));
+                if ($chatText !== '') {
+                    return ['text' => $chatText, 'error' => null];
+                }
+            }
+        } catch (ConnectionException) {
+            return ['text' => null, 'error' => 'cannot reach Ollama for Action generation'];
+        }
         try {
             $actionResponse = Http::timeout($timeout)->post("{$baseUrl}/api/generate", [
                 'model' => $model,
-                'prompt' => $actionPrompt,
+                'prompt' => "{$systemPrompt}
+            {$actionPrompt}",
                 'stream' => false,
                 'options' => [
                     'temperature' => $temperature,
                 ],
             ]);
         } catch (ConnectionException) {
-            return null;
+            return ['text' => null, 'error' => 'cannot reach Ollama /api/generate for Action generation'];
         }
 
         if (! $actionResponse->ok()) {
-            return null;
+            return ['text' => null, 'error' => 'Ollama /api/generate returned HTTP ' . $actionResponse->status()];
         }
 
         $actionText = trim((string) ($actionResponse->json('response') ?? $actionResponse->json('message.content')));
 
-        return $actionText !== '' ? $actionText : null;
+        if ($actionText === '') {
+            return ['text' => null, 'error' => 'Ollama returned an empty Action response'];
+        }
+
+        return ['text' => $actionText, 'error' => null];
     }
 
 
@@ -527,7 +561,8 @@ class LecturerChatbotController extends Controller
         string $prompt,
         array $insights,
         ?string $ollamaActionAdvice = null,
-        bool $ollamaConnected = false
+        bool $ollamaConnected = false,
+        ?string $ollamaActionError = null
     ): string {
         $lines = [
             'Overview',
@@ -545,7 +580,7 @@ class LecturerChatbotController extends Controller
         ];
 
         if ($ollamaConnected) {
-            $action = $ollamaActionAdvice ?? '- Ollama action advice is temporarily unavailable. Please try Generate Advice again.';
+            $action = $ollamaActionAdvice ?? ('- Ollama action advice is temporarily unavailable: ' . ($ollamaActionError ?? 'unknown error') . '. Please try Generate Advice again.');
         } else {
             $action = $this->buildActionPlanFromInsights($insights, $prompt);
         }
