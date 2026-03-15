@@ -153,13 +153,18 @@ class LecturerDashboardController extends Controller
             ? round((($currentMonthAverage - $previousMonthAverage) / $previousMonthAverage) * 100)
             : 0;
 
-        $weeklyDays = collect(range(6, 0))->map(function (int $offset) use ($referenceDate) {
-            return $referenceDate->copy()->subDays($offset)->startOfDay();
+        $weeklyReferenceDate = $now->copy()->startOfDay();
+        $weeklyDays = collect(range(6, 0))->map(function (int $offset) use ($weeklyReferenceDate) {
+            return $weeklyReferenceDate->copy()->subDays($offset);
         });
 
         $sentimentTrendLabels = $weeklyDays->map(fn(Carbon $day) => $day->format('D'));
         $sentimentTrendData = $weeklyDays->map(function (Carbon $day) use ($feedbacks, $inferSentiment) {
-            $dayFeedback = $feedbacks->filter(fn($feedback) => $feedback->created_at && $feedback->created_at->isSameDay($day));
+            $dayFeedback = $feedbacks->filter(function ($feedback) use ($day) {
+                return $feedback->created_at
+                    && $feedback->created_at->greaterThanOrEqualTo($day->copy()->startOfDay())
+                    && $feedback->created_at->lessThanOrEqualTo($day->copy()->endOfDay());
+            });
             $total = $dayFeedback->count();
 
             if ($total === 0) {
@@ -173,7 +178,11 @@ class LecturerDashboardController extends Controller
             return round(($positiveCount / $total) * 100);
         });
 
-        $weeklyFeedback = $feedbacks->filter(fn($feedback) => $feedback->created_at && $feedback->created_at->greaterThanOrEqualTo($referenceDate->copy()->subDays(6)->startOfDay()));
+        $weeklyFeedback = $feedbacks->filter(function ($feedback) use ($weeklyReferenceDate) {
+            return $feedback->created_at
+                && $feedback->created_at->greaterThanOrEqualTo($weeklyReferenceDate->copy()->subDays(6)->startOfDay())
+                && $feedback->created_at->lessThanOrEqualTo($weeklyReferenceDate->copy()->endOfDay());
+        });
         $weeklyTotal = $weeklyFeedback->count();
         $weeklyPositive = $weeklyFeedback->filter(function ($feedback) use ($inferSentiment) {
             return $inferSentiment($feedback->rating, (string) $feedback->comments) === 'positive';
