@@ -19,7 +19,8 @@
                 <div>
                     <p class="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Subject Catalog</p>
                     <h1 class="text-3xl font-bold text-slate-900 sm:text-4xl">Manage Subjects</h1>
-                    <p class="text-base text-slate-600">Create new subjects and keep the list organized for class setup.</p>
+                    <p class="text-base text-slate-600">Create new subjects and keep the list organized for class setup.
+                    </p>
                 </div>
                 <div class="flex flex-wrap items-center justify-center gap-3 sm:justify-start">
                     <a href="/admin/feedback"
@@ -27,11 +28,11 @@
                         Feedback
                     </a>
                     <a href="{{ route('admin.subjects.index') }}"
-                        class="inline-flex items-center rounded-full bg-sky-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-sky-200">
+                        class="inline-flex items-center rounded-full bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300">
                         Subjects
                     </a>
                     <a href="{{ route('admin.classrooms.index') }}"
-                        class="inline-flex items-center rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-200">
+                        class="inline-flex items-center rounded-full bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300">
                         Classes
                     </a>
                     <a href="/feedback"
@@ -42,7 +43,8 @@
             </header>
 
             @if (session('success'))
-                <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-6 py-4 text-sm font-medium text-emerald-800">
+                <div
+                    class="rounded-2xl border border-indigo-200 bg-indigo-50 px-6 py-4 text-sm font-medium text-indigo-800">
                     {{ session('success') }}
                 </div>
             @endif
@@ -68,15 +70,15 @@
                         <div>
                             <label class="text-sm font-medium text-slate-700" for="code">Subject Code</label>
                             <input id="code" type="text" name="code" value="{{ old('code') }}" required
-                                class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200">
+                                class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-300">
                         </div>
                         <div>
                             <label class="text-sm font-medium text-slate-700" for="name">Subject Name</label>
                             <input id="name" type="text" name="name" value="{{ old('name') }}" required
-                                class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200">
+                                class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-300">
                         </div>
                         <button type="submit"
-                            class="inline-flex w-full items-center justify-center rounded-xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-300">
+                            class="inline-flex w-full items-center justify-center rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300">
                             Add Subject
                         </button>
                     </form>
@@ -90,7 +92,7 @@
                         </div>
                         <div class="flex flex-wrap gap-2">
                             <a href="{{ route('admin.classrooms.index') }}"
-                                class="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-100">Classes</a>
+                                class="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-100">Classes</a>
                             <a href="/admin/feedback"
                                 class="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-100">Feedback</a>
                         </div>
@@ -101,17 +103,32 @@
                                 <tr>
                                     <th class="px-6 py-3 font-semibold">Code</th>
                                     <th class="px-6 py-3 font-semibold">Name</th>
+                                    <th class="px-6 py-3 text-right font-semibold">Actions</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100">
                                 @forelse ($subjects as $subject)
                                     <tr class="text-slate-700">
-                                        <td class="whitespace-nowrap px-6 py-4 font-medium text-slate-900">{{ $subject->code }}</td>
+                                        <td class="whitespace-nowrap px-6 py-4 font-medium text-slate-900">
+                                            {{ $subject->code }}</td>
                                         <td class="px-6 py-4 text-slate-600">{{ $subject->name }}</td>
+                                        <td class="px-6 py-4 text-right">
+                                            <form method="POST"
+                                                action="{{ route('admin.subjects.destroy', $subject) }}"
+                                                onsubmit="return confirm('Delete this subject? This will also delete classes assigned to it.');"
+                                                class="inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit"
+                                                    class="inline-flex items-center rounded-lg bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 transition hover:bg-rose-100 focus:outline-none focus:ring-2 focus:ring-rose-200">
+                                                    Delete
+                                                </button>
+                                            </form>
+                                        </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="2" class="px-6 py-10 text-center text-sm text-slate-500">
+                                        <td colspan="3" class="px-6 py-10 text-center text-sm text-slate-500">
                                             No subjects have been added yet.
                                         </td>
                                     </tr>

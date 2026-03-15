@@ -91,4 +91,27 @@ class ClassroomController extends Controller
         return redirect()->route('admin.classrooms.index')
             ->with('success', 'Student assigned to class.');
     }
+
+    public function destroy(Classroom $classroom)
+    {
+        $lecturerId = $classroom->lecturer_id;
+
+        $classroom->delete();
+
+        if ($lecturerId) {
+            $stillTeaching = Classroom::query()
+                ->where('lecturer_id', $lecturerId)
+                ->exists();
+
+            if (! $stillTeaching) {
+                User::query()
+                    ->whereKey($lecturerId)
+                    ->where('role', User::ROLE_LECTURER)
+                    ->update(['role' => User::ROLE_STUDENT]);
+            }
+        }
+
+        return redirect()->route('admin.classrooms.index')
+            ->with('success', 'Class deleted.');
+    }
 }

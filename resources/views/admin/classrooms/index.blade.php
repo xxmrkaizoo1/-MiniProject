@@ -27,11 +27,11 @@
                         Feedback
                     </a>
                     <a href="{{ route('admin.subjects.index') }}"
-                        class="inline-flex items-center rounded-full bg-sky-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-sky-200">
+                        class="inline-flex items-center rounded-full bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300">
                         Subjects
                     </a>
                     <a href="{{ route('admin.classrooms.index') }}"
-                        class="inline-flex items-center rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-200">
+                        class="inline-flex items-center rounded-full bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300">
                         Classes
                     </a>
                     <a href="/feedback"
@@ -42,7 +42,8 @@
             </header>
 
             @if (session('success'))
-                <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-6 py-4 text-sm font-medium text-emerald-800">
+                <div
+                    class="rounded-2xl border border-indigo-200 bg-indigo-50 px-6 py-4 text-sm font-medium text-indigo-800">
                     {{ session('success') }}
                 </div>
             @endif
@@ -68,15 +69,16 @@
                         <div>
                             <label class="text-sm font-medium text-slate-700" for="name">Class Name</label>
                             <input id="name" type="text" name="name" value="{{ old('name') }}" required
-                                class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200">
+                                class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-300">
                         </div>
                         <div>
                             <label class="text-sm font-medium text-slate-700" for="subject_id">Subject</label>
                             <select id="subject_id" name="subject_id" required
-                                class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200">
+                                class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-300">
                                 <option value="">Select subject</option>
                                 @foreach ($subjects as $subject)
-                                    <option value="{{ $subject->id }}" {{ old('subject_id') == $subject->id ? 'selected' : '' }}>
+                                    <option value="{{ $subject->id }}"
+                                        {{ old('subject_id') == $subject->id ? 'selected' : '' }}>
                                         {{ $subject->code }} - {{ $subject->name }}
                                     </option>
                                 @endforeach
@@ -85,17 +87,18 @@
                         <div>
                             <label class="text-sm font-medium text-slate-700" for="lecturer_id">Lecturer</label>
                             <select id="lecturer_id" name="lecturer_id"
-                                class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200">
+                                class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-300">
                                 <option value="">Not assigned</option>
                                 @foreach ($lecturers as $lecturer)
-                                    <option value="{{ $lecturer->id }}" {{ old('lecturer_id') == $lecturer->id ? 'selected' : '' }}>
+                                    <option value="{{ $lecturer->id }}"
+                                        {{ old('lecturer_id') == $lecturer->id ? 'selected' : '' }}>
                                         {{ $lecturer->name }}
                                     </option>
                                 @endforeach
                             </select>
                         </div>
                         <button type="submit"
-                            class="inline-flex w-full items-center justify-center rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-300">
+                            class="inline-flex w-full items-center justify-center rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300">
                             Add Class
                         </button>
                     </form>
@@ -105,15 +108,17 @@
                     <h2 class="text-lg font-semibold text-slate-900">Assign student</h2>
                     <p class="mt-1 text-sm text-slate-500">Enroll students quickly into existing classes.</p>
 
-                    <form method="POST" action="{{ route('admin.classrooms.enrollments.store') }}" class="mt-6 space-y-5">
+                    <form method="POST" action="{{ route('admin.classrooms.enrollments.store') }}"
+                        class="mt-6 space-y-5">
                         @csrf
                         <div>
                             <label class="text-sm font-medium text-slate-700" for="classroom_id">Class</label>
                             <select id="classroom_id" name="classroom_id" required
-                                class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200">
+                                class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-300">
                                 <option value="">Select class</option>
                                 @foreach ($classrooms as $classroom)
-                                    <option value="{{ $classroom->id }}" {{ old('classroom_id') == $classroom->id ? 'selected' : '' }}>
+                                    <option value="{{ $classroom->id }}"
+                                        {{ old('classroom_id') == $classroom->id ? 'selected' : '' }}>
                                         {{ $classroom->name }} ({{ $classroom->subject?->code }})
                                     </option>
                                 @endforeach
@@ -122,10 +127,11 @@
                         <div>
                             <label class="text-sm font-medium text-slate-700" for="student_id">Student</label>
                             <select id="student_id" name="student_id" required
-                                class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200">
+                                class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-300">
                                 <option value="">Select student</option>
                                 @foreach ($students as $student)
-                                    <option value="{{ $student->id }}" {{ old('student_id') == $student->id ? 'selected' : '' }}>
+                                    <option value="{{ $student->id }}"
+                                        {{ old('student_id') == $student->id ? 'selected' : '' }}>
                                         {{ $student->name }}
                                     </option>
                                 @endforeach
@@ -147,7 +153,7 @@
                     </div>
                     <div class="flex flex-wrap gap-2">
                         <a href="{{ route('admin.subjects.index') }}"
-                            class="inline-flex items-center rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700 hover:bg-sky-100">Subjects</a>
+                            class="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-100">Subjects</a>
                         <a href="/admin/feedback"
                             class="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-100">Feedback</a>
                     </div>
@@ -160,25 +166,41 @@
                                 <th class="px-6 py-3 font-semibold">Subject</th>
                                 <th class="px-6 py-3 font-semibold">Lecturer</th>
                                 <th class="px-6 py-3 font-semibold">Students</th>
+                                <th class="px-6 py-3 text-right font-semibold">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
                             @forelse ($classrooms as $classroom)
                                 <tr class="text-slate-700">
-                                    <td class="whitespace-nowrap px-6 py-4 font-medium text-slate-900">{{ $classroom->name }}</td>
+                                    <td class="whitespace-nowrap px-6 py-4 font-medium text-slate-900">
+                                        {{ $classroom->name }}</td>
                                     <td class="px-6 py-4 text-slate-600">{{ $classroom->subject?->code }} -
                                         {{ $classroom->subject?->name }}</td>
-                                    <td class="px-6 py-4 text-slate-600">{{ $classroom->lecturer?->name ?? 'Not assigned' }}</td>
+                                    <td class="px-6 py-4 text-slate-600">
+                                        {{ $classroom->lecturer?->name ?? 'Not assigned' }}</td>
                                     <td class="px-6 py-4">
                                         <span
-                                            class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                                            class="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700">
                                             {{ $classroom->enrollments->count() }} students
                                         </span>
+                                    </td>
+                                    <td class="px-6 py-4 text-right">
+                                        <form method="POST"
+                                            action="{{ route('admin.classrooms.destroy', $classroom) }}"
+                                            onsubmit="return confirm('Delete this class? This will also remove student enrollments for it.');"
+                                            class="inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                class="inline-flex items-center rounded-lg bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 transition hover:bg-rose-100 focus:outline-none focus:ring-2 focus:ring-rose-200">
+                                                Delete
+                                            </button>
+                                        </form>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="px-6 py-10 text-center text-sm text-slate-500">
+                                    <td colspan="5" class="px-6 py-10 text-center text-sm text-slate-500">
                                         No classes have been created yet.
                                     </td>
                                 </tr>

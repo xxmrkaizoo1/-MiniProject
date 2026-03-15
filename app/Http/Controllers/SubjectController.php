@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Classroom;
 use App\Models\Subject;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class SubjectController extends Controller
@@ -30,5 +32,33 @@ class SubjectController extends Controller
 
         return redirect()->route('admin.subjects.index')
             ->with('success', 'Subject created.');
+    }
+
+
+    public function destroy(Subject $subject)
+    {
+        $lecturerIds = $subject->classrooms()
+            ->whereNotNull('lecturer_id')
+            ->pluck('lecturer_id')
+            ->unique();
+
+        $subject->delete();
+
+        foreach ($lecturerIds as $lecturerId) {
+            $stillTeaching = Classroom::query()
+                ->where('lecturer_id', $lecturerId)
+                ->exists();
+
+            if (! $stillTeaching) {
+                User::query()
+                    ->whereKey($lecturerId)
+                    ->where('role', User::ROLE_LECTURER)
+                    ->update(['role' => User::ROLE_STUDENT]);
+            }
+        }
+
+
+        return redirect()->route('admin.subjects.index')
+            ->with('success', 'Subject deleted.');
     }
 }

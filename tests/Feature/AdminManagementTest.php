@@ -105,3 +105,107 @@ test('duplicated enrollment is not created twice', function () {
 
     $this->assertDatabaseCount('classroom_enrollments', 1);
 });
+
+test('admin can delete subject and related classrooms are removed', function () {
+    $admin = adminUser();
+    $subject = Subject::create([
+        'code' => 'SUB004',
+        'name' => 'Subject 004',
+    ]);
+
+    $classroom = Classroom::create([
+        'name' => 'D1',
+        'subject_id' => $subject->id,
+    ]);
+
+    $response = $this->actingAs($admin)->delete(route('admin.subjects.destroy', $subject));
+
+    $response->assertRedirect(route('admin.subjects.index'));
+
+    $this->assertDatabaseMissing('subjects', ['id' => $subject->id]);
+    $this->assertDatabaseMissing('classrooms', ['id' => $classroom->id]);
+});
+
+
+test('admin can delete class and revoke dashboard access when lecturer has no classes left', function () {
+    $admin = adminUser();
+    $subject = Subject::create([
+        'code' => 'SUB005',
+        'name' => 'Subject 005',
+    ]);
+    $lecturer = User::factory()->create([
+        'role' => User::ROLE_LECTURER,
+    ]);
+
+    $classroom = Classroom::create([
+        'name' => 'E1',
+        'subject_id' => $subject->id,
+        'lecturer_id' => $lecturer->id,
+    ]);
+
+    $response = $this->actingAs($admin)->delete(route('admin.classrooms.destroy', $classroom));
+
+    $response->assertRedirect(route('admin.classrooms.index'));
+    $this->assertDatabaseMissing('classrooms', ['id' => $classroom->id]);
+    expect($lecturer->fresh()->role)->toBe(User::ROLE_STUDENT);
+
+    $dashboardResponse = $this->actingAs($lecturer->fresh())->get(route('dashboard'));
+    $dashboardResponse->assertForbidden();
+});
+
+test('admin can delete class and keep lecturer access when other classes remain', function () {
+    $admin = adminUser();
+    $subject = Subject::create([
+        'code' => 'SUB006',
+        'name' => 'Subject 006',
+    ]);
+    $lecturer = User::factory()->create([
+        'role' => User::ROLE_LECTURER,
+    ]);
+
+    $classroomToDelete = Classroom::create([
+        'name' => 'F1',
+        'subject_id' => $subject->id,
+        'lecturer_id' => $lecturer->id,
+    ]);
+
+    Classroom::create([
+        'name' => 'F2',
+        'subject_id' => $subject->id,
+        'lecturer_id' => $lecturer->id,
+    ]);
+
+    $response = $this->actingAs($admin)->delete(route('admin.classrooms.destroy', $classroomToDelete));
+
+    $response->assertRedirect(route('admin.classrooms.index'));
+    expect($lecturer->fresh()->role)->toBe(User::ROLE_LECTURER);
+
+    $dashboardResponse = $this->actingAs($lecturer->fresh())->get(route('dashboard'));
+    $dashboardResponse->assertOk();
+});
+
+test('admin can delete subject and revoke dashboard access for orphaned lecturer', function () {
+    $admin = adminUser();
+    $subject = Subject::create([
+        'code' => 'SUB007',
+        'name' => 'Subject 007',
+    ]);
+    $lecturer = User::factory()->create([
+        'role' => User::ROLE_LECTURER,
+    ]);
+
+    Classroom::create([
+        'name' => 'G1',
+        'subject_id' => $subject->id,
+        'lecturer_id' => $lecturer->id,
+    ]);
+
+    $response = $this->actingAs($admin)->delete(route('admin.subjects.destroy', $subject));
+
+    $response->assertRedirect(route('admin.subjects.index'));
+    $this->assertDatabaseMissing('subjects', ['id' => $subject->id]);
+    expect($lecturer->fresh()->role)->toBe(User::ROLE_STUDENT);
+
+    $dashboardResponse = $this->actingAs($lecturer->fresh())->get(route('dashboard'));
+    $dashboardResponse->assertForbidden();
+});

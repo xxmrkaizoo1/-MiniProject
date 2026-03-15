@@ -23,7 +23,7 @@
                         ratings.</p>
                 </div>
                 @if (session('success'))
-                    <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                    <div class="rounded-2xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-700">
                         {{ session('success') }}
                     </div>
                 @endif
@@ -43,11 +43,11 @@
                         Feedback
                     </a>
                     <a href="{{ route('admin.subjects.index') }}"
-                        class="inline-flex items-center rounded-full bg-sky-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-sky-200">
+                        class="inline-flex items-center rounded-full bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300">
                         Subjects
                     </a>
                     <a href="{{ route('admin.classrooms.index') }}"
-                        class="inline-flex items-center rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-200">
+                        class="inline-flex items-center rounded-full bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300">
                         Classes
                     </a>
                     <a href="/feedback"
@@ -139,7 +139,7 @@
                             </button>
                             <button type="submit"
                                 formaction="{{ route('admin.feedback.export', ['format' => 'excel']) }}"
-                                class="inline-flex items-center rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-200">
+                                class="inline-flex items-center rounded-full bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300">
                                 Download Excel (CSV)
                             </button>
                         </div>
@@ -163,9 +163,9 @@
                                 Delete Selected
                             </button>
                             <a href="{{ route('admin.subjects.index') }}"
-                                class="inline-flex items-center rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700 hover:bg-sky-100">Subjects</a>
+                                class="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-100">Subjects</a>
                             <a href="{{ route('admin.classrooms.index') }}"
-                                class="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-100">Classes</a>
+                                class="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-100">Classes</a>
                             <a href="/feedback"
                                 class="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-100">Back
                                 to Form</a>
@@ -218,7 +218,7 @@
                                         </td>
                                         <td class="px-6 py-4">
                                             <span
-                                                class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold {{ $f->is_anonymous ? 'bg-slate-100 text-slate-700' : 'bg-emerald-50 text-emerald-700' }}">
+                                                class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold {{ $f->is_anonymous ? 'bg-slate-100 text-slate-700' : 'bg-indigo-50 text-indigo-700' }}">
                                                 {{ $f->is_anonymous ? 'Yes' : 'No' }}
                                             </span>
                                         </td>

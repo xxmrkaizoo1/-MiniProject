@@ -23,22 +23,25 @@ Route::middleware(['auth', 'admin'])->group(function () {
         ->name('admin.feedback.export');
     Route::get('/admin/subjects', [SubjectController::class, 'index'])->name('admin.subjects.index');
     Route::post('/admin/subjects', [SubjectController::class, 'store'])->name('admin.subjects.store');
+    Route::delete('/admin/subjects/{subject}', [SubjectController::class, 'destroy'])->name('admin.subjects.destroy');
     Route::get('/admin/classes', [ClassroomController::class, 'index'])->name('admin.classrooms.index');
     Route::post('/admin/classes', [ClassroomController::class, 'store'])->name('admin.classrooms.store');
+    Route::delete('/admin/classes/{classroom}', [ClassroomController::class, 'destroy'])->name('admin.classrooms.destroy');
     Route::post('/admin/classes/enrollments', [ClassroomController::class, 'storeEnrollment'])
         ->name('admin.classrooms.enrollments.store');
 });
 
-Route::get('/dashboard', [LecturerDashboardController::class, 'dashboard'])->middleware(['auth', 'verified'])
+Route::get('/dashboard', [LecturerDashboardController::class, 'dashboard'])
+    ->middleware(['auth', 'verified', 'role:lecturer'])
     ->name('dashboard');
 
 Route::get('/lecturer/chatbot', [LecturerChatbotController::class, 'dashboard'])
-    ->middleware(['auth', 'verified'])
+    ->middleware(['auth', 'verified', 'role:lecturer'])
     ->name('lecturer.chatbot.index');
 
 
 Route::post('/lecturer/chatbot', [LecturerChatbotController::class, 'respond'])
-    ->middleware(['auth', 'verified'])
+    ->middleware(['auth', 'verified', 'role:lecturer'])
     ->name('lecturer.chatbot.respond');
 
 Route::middleware('auth')->group(function () {
