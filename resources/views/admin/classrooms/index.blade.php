@@ -59,7 +59,7 @@
                 </div>
             @endif
 
-            <div class="grid gap-6 lg:grid-cols-3">
+            <div class="grid gap-6 lg:grid-cols-2">
                 <section class="rounded-2xl bg-white p-6 shadow-lg ring-1 ring-slate-200">
                     <h2 class="text-lg font-semibold text-slate-900">Create a class</h2>
                     <p class="mt-1 text-sm text-slate-500">Link each class to a subject and optional lecturer.</p>
@@ -144,45 +144,7 @@
                     </form>
                 </section>
 
-                <section class="rounded-2xl bg-white p-6 shadow-lg ring-1 ring-slate-200">
-                    <h2 class="text-lg font-semibold text-slate-900">Assign lecturer</h2>
-                    <p class="mt-1 text-sm text-slate-500">Assign or change a lecturer for an existing class.</p>
 
-                    <form method="POST" action="{{ route('admin.classrooms.lecturers.store') }}"
-                        class="mt-6 space-y-5">
-                        @csrf
-                        <div>
-                            <label class="text-sm font-medium text-slate-700" for="assign_classroom_id">Class</label>
-                            <select id="assign_classroom_id" name="assign_classroom_id" required
-                                class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-300">
-                                <option value="">Select class</option>
-                                @foreach ($classrooms as $classroom)
-                                    <option value="{{ $classroom->id }}"
-                                        {{ old('assign_classroom_id') == $classroom->id ? 'selected' : '' }}>
-                                        {{ $classroom->name }} ({{ $classroom->subject?->code }})
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div>
-                            <label class="text-sm font-medium text-slate-700" for="assign_lecturer_id">Lecturer</label>
-                            <select id="assign_lecturer_id" name="assign_lecturer_id"
-                                class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-300">
-                                <option value="">Not assigned</option>
-                                @foreach ($students as $assignableUser)
-                                    <option value="{{ $assignableUser->id }}"
-                                        {{ old('assign_lecturer_id') == $assignableUser->id ? 'selected' : '' }}>
-                                        {{ $assignableUser->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <button type="submit"
-                            class="inline-flex w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-300">
-                            Assign Lecturer
-                        </button>
-                    </form>
-                </section>
             </div>
 
             <section class="overflow-hidden rounded-2xl bg-white shadow-lg ring-1 ring-slate-200">
