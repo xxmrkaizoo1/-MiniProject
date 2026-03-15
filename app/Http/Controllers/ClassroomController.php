@@ -30,6 +30,23 @@ class ClassroomController extends Controller
             'lecturer_id' => 'nullable|exists:users,id',
         ]);
 
+
+        if (! empty($validated['lecturer_id'])) {
+            $lecturerExists = User::query()
+                ->whereKey($validated['lecturer_id'])
+                ->where('role', '!=', User::ROLE_ADMIN)
+                ->exists();
+
+            if (! $lecturerExists) {
+                return redirect()
+                    ->route('admin.classrooms.index')
+                    ->withErrors(['lecturer_id' => 'Selected user cannot be assigned as lecturer.'])
+                    ->withInput();
+            }
+        }
+
+
+
         Classroom::create($validated);
 
         if (! empty($validated['lecturer_id'])) {
@@ -48,7 +65,24 @@ class ClassroomController extends Controller
             'student_id' => 'required|exists:users,id',
         ]);
 
-        ClassroomEnrollment::firstOrCreate($validated);
+        $studentExists = User::query()
+            ->whereKey($validated['student_id'])
+            ->where('role', '!=', User::ROLE_ADMIN)
+            ->exists();
+
+        if (! $studentExists) {
+            return redirect()
+                ->route('admin.classrooms.index')
+                ->withErrors(['student_id' => 'Selected user cannot be enrolled as student.'])
+                ->withInput();
+        }
+
+        $enrollment = ClassroomEnrollment::firstOrCreate($validated);
+
+        if (! $enrollment->wasRecentlyCreated) {
+            return redirect()->route('admin.classrooms.index')
+                ->with('success', 'Student is already assigned to this class.');
+        }
 
         User::whereKey($validated['student_id'])
             ->where('role', '!=', User::ROLE_ADMIN)

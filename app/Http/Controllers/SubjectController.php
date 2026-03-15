@@ -18,8 +18,13 @@ class SubjectController extends Controller
     {
         $validated = $request->validate([
             'code' => 'required|string|max:20|unique:subjects,code',
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:255|unique:subjects,name',
         ]);
+
+
+        $validated['code'] = strtoupper(trim($validated['code']));
+        $validated['name'] = trim($validated['name']);
+
 
         Subject::create($validated);
 
