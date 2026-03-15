@@ -258,7 +258,7 @@
                             </span>
                         </div>
 
-                        @if (!empty($responseSections))
+                        @if (count($responseSections) > 0)
                             <div class="grid gap-3 md:grid-cols-3">
                                 @foreach ($responseSections as $section)
                                     <article
@@ -266,30 +266,7 @@
                                         <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-300">
                                             {{ $section['title'] }}
                                         </p>
-
-                                        @php
-                                            $bullets = collect(preg_split('/\R/', $section['content']))
-                                                ->map(fn($line) => trim((string) $line))
-                                                ->filter(fn($line) => $line !== '');
-                                            $hasList = $bullets->contains(fn($line) => preg_match('/^(?:[-*]|\d+[.)])\s+/', $line));
-                                        @endphp
-
-                                        @if ($hasList)
-                                            <div class="space-y-2 leading-6">
-                                                @foreach ($bullets as $line)
-                                                    @if (preg_match('/^(?:[-*]|\d+[.)])\s+(.+)$/', $line, $matches))
-                                                        <div class="flex gap-2">
-                                                            <span class="mt-1 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-indigo-500"></span>
-                                                            <span>{{ $matches[1] }}</span>
-                                                        </div>
-                                                    @else
-                                                        <p class="whitespace-pre-line">{{ $line }}</p>
-                                                    @endif
-                                                @endforeach
-                                            </div>
-                                        @else
-                                            <p class="whitespace-pre-line leading-6">{{ $section['content'] }}</p>
-                                        @endif
+                                        <div class="whitespace-pre-line leading-6">{{ $section['content'] }}</div>
                                     </article>
                                 @endforeach
                             </div>
