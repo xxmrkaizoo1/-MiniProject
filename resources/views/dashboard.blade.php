@@ -225,9 +225,81 @@
                 </div>
 
                 @if (session('chatbot_response'))
-                    <div
-                        class="mt-4 whitespace-pre-line rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-100">
-                        {{ session('chatbot_response') }}
+                    @php
+                        $chatbotResponse = trim((string) session('chatbot_response'));
+                        $sectionStyles = [
+                            'overview' => [
+                                'title' => 'Overview',
+                                'icon' => '🧭',
+                                'wrapper' =>
+                                    'border-sky-200 bg-sky-50/80 text-sky-900 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-100',
+                            ],
+                            'themes & issues' => [
+                                'title' => 'Themes & Issues',
+                                'icon' => '🧩',
+                                'wrapper' =>
+                                    'border-violet-200 bg-violet-50/80 text-violet-900 dark:border-violet-500/30 dark:bg-violet-500/10 dark:text-violet-100',
+                            ],
+                            'action' => [
+                                'title' => 'Action',
+                                'icon' => '✅',
+                                'wrapper' =>
+                                    'border-emerald-200 bg-emerald-50/80 text-emerald-900 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-100',
+                            ],
+                        ];
+
+                        $normalizedResponse = preg_replace('/\r\n?/', "\n", $chatbotResponse) ?? $chatbotResponse;
+                        $sectionPattern =
+                            '/(?:^|\n)\s*(?:#{1,3}\s*)?(Overview|Themes\s*&\s*Issues|Action)\s*:?\s*\n(.*?)(?=(?:\n\s*(?:#{1,3}\s*)?(?:Overview|Themes\s*&\s*Issues|Action)\s*:?\s*\n)|\z)/is';
+
+                        preg_match_all($sectionPattern, $normalizedResponse, $matches, PREG_SET_ORDER);
+
+                        $parsedSections = collect($matches)
+                            ->map(function ($match) {
+                                return [
+                                    'key' => str($match[1])->lower()->trim()->toString(),
+                                    'content' => trim((string) $match[2]),
+                                ];
+                            })
+                            ->filter(fn($section) => filled($section['content']))
+                            ->values();
+                    @endphp
+
+                    <div class="mt-5 rounded-2xl border border-slate-200 bg-slate-50/60 p-4 dark:border-slate-700 dark:bg-slate-900/60">
+                        <div class="mb-3 flex items-center justify-between gap-3">
+                            <h4 class="text-sm font-semibold text-slate-800 dark:text-slate-100">AI Response</h4>
+                            <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Structured output</span>
+                        </div>
+
+                        @if ($parsedSections->isNotEmpty())
+                            <div class="space-y-3">
+                                @foreach ($parsedSections as $section)
+                                    @php
+                                        $style = $sectionStyles[$section['key']] ?? [
+                                            'title' => str($section['key'])->headline()->toString(),
+                                            'icon' => '💬',
+                                            'wrapper' =>
+                                                'border-slate-200 bg-white text-slate-800 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100',
+                                        ];
+                                    @endphp
+
+                                    <article class="rounded-xl border px-4 py-3 shadow-sm {{ $style['wrapper'] }}">
+                                        <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide opacity-90">
+                                            <span>{{ $style['icon'] }}</span>
+                                            <span>{{ $style['title'] }}</span>
+                                        </div>
+                                        <div class="mt-2 whitespace-pre-line text-sm leading-relaxed">
+                                            {{ $section['content'] }}
+                                        </div>
+                                    </article>
+                                @endforeach
+                            </div>
+                        @else
+                            <div
+                                class="whitespace-pre-line rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-100">
+                                {{ $chatbotResponse }}
+                            </div>
+                        @endif
                     </div>
                 @endif
 
