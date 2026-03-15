@@ -225,14 +225,85 @@
                 </div>
 
                 @if (session('chatbot_response'))
+                    @php
+                        $chatbotResponse = trim((string) session('chatbot_response'));
+                        $responseSections = [];
+                        $sectionPattern = '/^\s*(?:#{1,3}\s*)?(Overview|Themes\s*&\s*Issues|Action)\s*:?\s*$/im';
+                        preg_match_all($sectionPattern, $chatbotResponse, $sectionMatches, PREG_OFFSET_CAPTURE);
+
+                        if (!empty($sectionMatches[1])) {
+                            foreach ($sectionMatches[1] as $index => $sectionMatch) {
+                                $sectionTitle = \Illuminate\Support\Str::title(str_replace('&', ' & ', preg_replace('/\s+/', ' ', trim($sectionMatch[0]))));
+                                $sectionStart = $sectionMatches[0][$index][1] + strlen($sectionMatches[0][$index][0]);
+                                $nextSectionStart = $sectionMatches[0][$index + 1][1] ?? strlen($chatbotResponse);
+                                $sectionContent = trim(substr($chatbotResponse, $sectionStart, $nextSectionStart - $sectionStart));
+
+                                if ($sectionContent !== '') {
+                                    $responseSections[] = [
+                                        'title' => $sectionTitle,
+                                        'content' => $sectionContent,
+                                    ];
+                                }
+                            }
+                        }
+                    @endphp
+
                     <div
-                        class="mt-4 whitespace-pre-line rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-100">
-                        {{ session('chatbot_response') }}
+                        class="mt-5 rounded-2xl border border-indigo-100 bg-gradient-to-br from-white to-indigo-50/60 p-4 dark:border-indigo-500/20 dark:from-slate-900 dark:to-indigo-500/5">
+                        <div class="mb-4 flex items-center justify-between gap-2">
+                            <h4 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Chatbot output</h4>
+                            <span
+                                class="inline-flex items-center rounded-full bg-indigo-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-100">
+                                Latest response
+                            </span>
+                        </div>
+
+                        @if (!empty($responseSections))
+                            <div class="grid gap-3 md:grid-cols-3">
+                                @foreach ($responseSections as $section)
+                                    <article
+                                        class="rounded-xl border border-slate-200 bg-white/90 p-4 text-sm text-slate-700 shadow-sm dark:border-slate-700 dark:bg-slate-950/80 dark:text-slate-200">
+                                        <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-300">
+                                            {{ $section['title'] }}
+                                        </p>
+
+                                        @php
+                                            $bullets = collect(preg_split('/\R/', $section['content']))
+                                                ->map(fn($line) => trim((string) $line))
+                                                ->filter(fn($line) => $line !== '');
+                                            $hasList = $bullets->contains(fn($line) => preg_match('/^(?:[-*]|\d+[.)])\s+/', $line));
+                                        @endphp
+
+                                        @if ($hasList)
+                                            <div class="space-y-2 leading-6">
+                                                @foreach ($bullets as $line)
+                                                    @if (preg_match('/^(?:[-*]|\d+[.)])\s+(.+)$/', $line, $matches))
+                                                        <div class="flex gap-2">
+                                                            <span class="mt-1 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-indigo-500"></span>
+                                                            <span>{{ $matches[1] }}</span>
+                                                        </div>
+                                                    @else
+                                                        <p class="whitespace-pre-line">{{ $line }}</p>
+                                                    @endif
+                                                @endforeach
+                                            </div>
+                                        @else
+                                            <p class="whitespace-pre-line leading-6">{{ $section['content'] }}</p>
+                                        @endif
+                                    </article>
+                                @endforeach
+                            </div>
+                        @else
+                            <div
+                                class="whitespace-pre-line rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-100">
+                                {{ $chatbotResponse }}
+                            </div>
+                        @endif
                     </div>
                 @endif
 
                 <form method="POST" action="{{ route('lecturer.chatbot.respond') }}"
-                    class="mt-6 grid gap-4 lg:grid-cols-3">
+                    class="mt-6 grid gap-4 rounded-2xl border border-slate-200 bg-slate-50/70 p-4 lg:grid-cols-3 dark:border-slate-700 dark:bg-slate-950/40">
                     @csrf
                     <div>
                         <label for="classroom_id" class="block text-sm font-medium text-slate-700 dark:text-slate-300">
