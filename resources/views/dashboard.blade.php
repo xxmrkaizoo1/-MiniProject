@@ -15,7 +15,7 @@
                 $issueLabelsValue = collect($issueLabels ?? []);
                 $issueDataValue = collect($issueData ?? []);
                 $focusAreaAdvice = $focusAreaAdvice ?? null;
-                $ollamStatus = $ollamaStatus ?? [
+                $ollamaStatus = $ollamaStatus ?? [
                     'connected' => false,
                     'message' => 'Ollama not configured',
                 ];
@@ -175,7 +175,9 @@
                     </div>
                     <div class="mt-4 space-y-3">
                         @foreach ($issueLabelsValue as $index => $label)
-                            @php($issuePercent = max(0, min(100, (int) $issueDataValue->get($index, 0))))
+                            @php
+                                $issuePercent = max(0, min(100, (int) $issueDataValue->get($index, 0)));
+                            @endphp
                             <div>
                                 <div
                                     class="mb-1 flex items-center justify-between text-sm text-gray-600 dark:text-gray-300">
@@ -224,19 +226,25 @@
                     @endif
                 </div>
 
-                @if (session('chatbot_response'))
-                    @php
-                        $chatbotResponse = trim((string) session('chatbot_response'));
-                        $responseSections = [];
+                @php
+                    $chatbotResponse = trim((string) session('chatbot_response', ''));
+                    $responseSections = [];
+                    $hasChatbotResponse = $chatbotResponse !== '';
+
+                    if ($hasChatbotResponse) {
                         $sectionPattern = '/^\s*(?:#{1,3}\s*)?(Overview|Themes\s*&\s*Issues|Action)\s*:?\s*$/im';
                         preg_match_all($sectionPattern, $chatbotResponse, $sectionMatches, PREG_OFFSET_CAPTURE);
 
                         if (!empty($sectionMatches[1])) {
                             foreach ($sectionMatches[1] as $index => $sectionMatch) {
-                                $sectionTitle = \Illuminate\Support\Str::title(str_replace('&', ' & ', preg_replace('/\s+/', ' ', trim($sectionMatch[0]))));
+                                $sectionTitle = \Illuminate\Support\Str::title(
+                                    str_replace('&', ' & ', preg_replace('/\s+/', ' ', trim($sectionMatch[0]))),
+                                );
                                 $sectionStart = $sectionMatches[0][$index][1] + strlen($sectionMatches[0][$index][0]);
                                 $nextSectionStart = $sectionMatches[0][$index + 1][1] ?? strlen($chatbotResponse);
-                                $sectionContent = trim(substr($chatbotResponse, $sectionStart, $nextSectionStart - $sectionStart));
+                                $sectionContent = trim(
+                                    substr($chatbotResponse, $sectionStart, $nextSectionStart - $sectionStart),
+                                );
 
                                 if ($sectionContent !== '') {
                                     $responseSections[] = [
@@ -246,8 +254,10 @@
                                 }
                             }
                         }
-                    @endphp
+                    }
+                @endphp
 
+                @if ($hasChatbotResponse)
                     <div
                         class="mt-5 rounded-2xl border border-indigo-100 bg-gradient-to-br from-white to-indigo-50/60 p-4 dark:border-indigo-500/20 dark:from-slate-900 dark:to-indigo-500/5">
                         <div class="mb-4 flex items-center justify-between gap-2">
@@ -258,129 +268,133 @@
                             </span>
                         </div>
 
-                        @if (count($responseSections) > 0)
-                            <div class="grid gap-3 md:grid-cols-3">
-                                @foreach ($responseSections as $section)
-                                    <article
-                                        class="rounded-xl border border-slate-200 bg-white/90 p-4 text-sm text-slate-700 shadow-sm dark:border-slate-700 dark:bg-slate-950/80 dark:text-slate-200">
-                                        <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-300">
-                                            {{ $section['title'] }}
-                                        </p>
-                                        <div class="whitespace-pre-line leading-6">{{ $section['content'] }}</div>
-                                    </article>
-                                @endforeach
-                            </div>
-                        @else
-                            <div
-                                class="whitespace-pre-line rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-100">
-                                {{ $chatbotResponse }}
-                            </div>
-                        @endif
+                        @forelse ($responseSections as $section)
+                            @if ($loop->first)
+                                <div class="grid gap-3 md:grid-cols-3">
+                            @endif
+
+                            <article
+                                class="rounded-xl border border-slate-200 bg-white/90 p-4 text-sm text-slate-700 shadow-sm dark:border-slate-700 dark:bg-slate-950/80 dark:text-slate-200">
+                                <p
+                                    class="mb-2 text-xs font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-300">
+                                    {{ $section['title'] }}
+                                </p>
+                                <div class="whitespace-pre-line leading-6">{{ $section['content'] }}</div>
+                            </article>
+
+                            @if ($loop->last)
                     </div>
                 @endif
-
-                <form method="POST" action="{{ route('lecturer.chatbot.respond') }}"
-                    class="mt-6 grid gap-4 rounded-2xl border border-slate-200 bg-slate-50/70 p-4 lg:grid-cols-3 dark:border-slate-700 dark:bg-slate-950/40">
-                    @csrf
-                    <div>
-                        <label for="classroom_id" class="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                            Class
-                        </label>
-                        <select id="classroom_id" name="classroom_id" {{ $classrooms->isNotEmpty() ? 'required' : '' }}
-                            class="mt-2 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
-                            <option value="">Select class</option>
-                            @foreach ($classrooms as $classroom)
-                                <option value="{{ $classroom->id }}"
-                                    {{ old('classroom_id') == $classroom->id ? 'selected' : '' }}>
-                                    {{ $classroom->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @if ($classrooms->isEmpty())
-                            <p class="mt-2 text-xs text-rose-600 dark:text-rose-300">No classes assigned yet.</p>
-                        @endif
-                        @error('classroom_id')
-                            <p class="mt-2 text-xs text-rose-600 dark:text-rose-300">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label for="subject_id" class="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                            Subject
-                        </label>
-                        <select id="subject_id" name="subject_id" required
-                            class="mt-2 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
-                            <option value="">Select subject</option>
-                            @foreach ($subjects as $subject)
-                                <option value="{{ $subject->id }}"
-                                    {{ old('subject_id') == $subject->id ? 'selected' : '' }}>
-                                    {{ $subject->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('subject_id')
-                            <p class="mt-2 text-xs text-rose-600 dark:text-rose-300">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label for="prompt" class="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                            Lecturer notes (optional)
-                        </label>
-                        <textarea id="prompt" name="prompt" rows="3"
-                            class="mt-2 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
-                            placeholder="Share context or goals for your next session">{{ old('prompt') }}</textarea>
-                        @error('prompt')
-                            <p class="mt-2 text-xs text-rose-600 dark:text-rose-300">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div class="lg:col-span-3">
-                        <button type="submit"
-                            class="animate-glow-pulse inline-flex w-full items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-900">
-                            Generate Advice
-                        </button>
-                    </div>
-                </form>
-            </section>
-
-            <section
-                class="animate-fade-up-delay-3 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition duration-300 hover:shadow-md dark:border-slate-700 dark:bg-gray-900">
-                <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Student Feedback</h3>
-                <p class="text-sm text-slate-600 dark:text-slate-300">Latest feedback submitted by students.</p>
-
-                <div class="mt-6 space-y-4">
-                    @forelse ($feedbacks as $feedback)
-                        <div
-                            class="animate-fade-up flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition duration-300 hover:-translate-y-0.5 hover:shadow-md dark:border-slate-700 dark:bg-slate-950">
-                            <div class="flex flex-wrap items-start justify-between gap-2">
-                                <div>
-                                    <p class="text-sm font-semibold text-slate-900 dark:text-white">
-                                        {{ $feedback->subject }}</p>
-                                    <p class="text-xs text-slate-500 dark:text-slate-300">
-                                        {{ optional($feedback->created_at)->format('d M Y, H:i') }}
-                                    </p>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <span
-                                        class="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-100">
-                                        Rating {{ $feedback->rating }}/5
-                                    </span>
-                                    <span
-                                        class="rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-100">
-                                        Mood {{ $feedback->mood_rating }}/5
-                                    </span>
-                                </div>
-                            </div>
-                            <p class="text-sm text-slate-600 dark:text-slate-300">
-                                {{ $feedback->comments ?: 'No comment provided.' }}
-                            </p>
-                        </div>
-                    @empty
-                        <p class="text-sm text-slate-500 dark:text-slate-300">No feedback submissions yet.</p>
-                    @endforelse
+            @empty
+                <div
+                    class="whitespace-pre-line rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-100">
+                    {{ $chatbotResponse }}
                 </div>
-            </section>
+                @endforelse
         </div>
+        @endif
+
+        <form method="POST" action="{{ route('lecturer.chatbot.respond') }}"
+            class="mt-6 grid gap-4 rounded-2xl border border-slate-200 bg-slate-50/70 p-4 lg:grid-cols-3 dark:border-slate-700 dark:bg-slate-950/40">
+            @csrf
+            <div>
+                <label for="classroom_id" class="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                    Class
+                </label>
+                <select id="classroom_id" name="classroom_id" {{ $classrooms->isNotEmpty() ? 'required' : '' }}
+                    class="mt-2 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
+                    <option value="">Select class</option>
+                    @foreach ($classrooms as $classroom)
+                        <option value="{{ $classroom->id }}"
+                            {{ old('classroom_id') == $classroom->id ? 'selected' : '' }}>
+                            {{ $classroom->name }}
+                        </option>
+                    @endforeach
+                </select>
+                @if ($classrooms->isEmpty())
+                    <p class="mt-2 text-xs text-rose-600 dark:text-rose-300">No classes assigned yet.</p>
+                @endif
+                @error('classroom_id')
+                    <p class="mt-2 text-xs text-rose-600 dark:text-rose-300">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div>
+                <label for="subject_id" class="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                    Subject
+                </label>
+                <select id="subject_id" name="subject_id" required
+                    class="mt-2 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
+                    <option value="">Select subject</option>
+                    @foreach ($subjects as $subject)
+                        <option value="{{ $subject->id }}" {{ old('subject_id') == $subject->id ? 'selected' : '' }}>
+                            {{ $subject->name }}
+                        </option>
+                    @endforeach
+                </select>
+                @error('subject_id')
+                    <p class="mt-2 text-xs text-rose-600 dark:text-rose-300">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div>
+                <label for="prompt" class="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                    Lecturer notes (optional)
+                </label>
+                <textarea id="prompt" name="prompt" rows="3"
+                    class="mt-2 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                    placeholder="Share context or goals for your next session">{{ old('prompt') }}</textarea>
+                @error('prompt')
+                    <p class="mt-2 text-xs text-rose-600 dark:text-rose-300">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div class="lg:col-span-3">
+                <button type="submit"
+                    class="animate-glow-pulse inline-flex w-full items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-900">
+                    Generate Advice
+                </button>
+            </div>
+        </form>
+        </section>
+
+        <section
+            class="animate-fade-up-delay-3 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition duration-300 hover:shadow-md dark:border-slate-700 dark:bg-gray-900">
+            <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Student Feedback</h3>
+            <p class="text-sm text-slate-600 dark:text-slate-300">Latest feedback submitted by students.</p>
+
+            <div class="mt-6 space-y-4">
+                @forelse ($feedbacks as $feedback)
+                    <div
+                        class="animate-fade-up flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition duration-300 hover:-translate-y-0.5 hover:shadow-md dark:border-slate-700 dark:bg-slate-950">
+                        <div class="flex flex-wrap items-start justify-between gap-2">
+                            <div>
+                                <p class="text-sm font-semibold text-slate-900 dark:text-white">
+                                    {{ $feedback->subject }}</p>
+                                <p class="text-xs text-slate-500 dark:text-slate-300">
+                                    {{ optional($feedback->created_at)->format('d M Y, H:i') }}
+                                </p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span
+                                    class="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-100">
+                                    Rating {{ $feedback->rating }}/5
+                                </span>
+                                <span
+                                    class="rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-100">
+                                    Mood {{ $feedback->mood_rating }}/5
+                                </span>
+                            </div>
+                        </div>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            {{ $feedback->comments ?: 'No comment provided.' }}
+                        </p>
+                    </div>
+                @empty
+                    <p class="text-sm text-slate-500 dark:text-slate-300">No feedback submissions yet.</p>
+                @endforelse
+            </div>
+        </section>
+    </div>
     </div>
 @endsection
