@@ -60,9 +60,22 @@ class ClassroomController extends Controller
     public function storeEnrollment(Request $request)
     {
         $validated = $request->validate([
+            'enrollment_subject_id' => 'required|exists:subjects,id',
             'classroom_id' => 'required|exists:classrooms,id',
             'student_id' => 'required|exists:users,id',
         ]);
+
+        $classroomMatchesSubject = Classroom::query()
+            ->whereKey($validated['classroom_id'])
+            ->where('subject_id', $validated['enrollment_subject_id'])
+            ->exists();
+
+        if (! $classroomMatchesSubject) {
+            return redirect()
+                ->route('admin.classrooms.index')
+                ->withErrors(['classroom_id' => 'Selected class does not belong to the selected subject.'])
+                ->withInput();
+        }
 
         $studentExists = User::query()
             ->whereKey($validated['student_id'])
@@ -76,21 +89,29 @@ class ClassroomController extends Controller
                 ->withInput();
         }
 
-        $enrollment = ClassroomEnrollment::firstOrCreate($validated);
+        $enrollment = ClassroomEnrollment::firstOrCreate([
+            'classroom_id' => $validated['classroom_id'],
+            'student_id' => $validated['student_id'],
+        ]);
 
         if (! $enrollment->wasRecentlyCreated) {
             return redirect()->route('admin.classrooms.index')
                 ->with('success', 'Student is already assigned to this class.');
         }
 
-        User::whereKey($validated['student_id'])
-            ->where('role', '!=', User::ROLE_ADMIN)
-            ->update(['role' => User::ROLE_STUDENT]);
+        $isTeachingAnyClass = Classroom::query()
+            ->where('lecturer_id', $validated['student_id'])
+            ->exists();
+
+        if (! $isTeachingAnyClass) {
+            User::whereKey($validated['student_id'])
+                ->where('role', '!=', User::ROLE_ADMIN)
+                ->update(['role' => User::ROLE_STUDENT]);
+        }
 
         return redirect()->route('admin.classrooms.index')
             ->with('success', 'Student assigned to class.');
     }
-
 
     public function destroy(Classroom $classroom)
     {

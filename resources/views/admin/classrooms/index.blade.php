@@ -112,6 +112,19 @@
                         class="mt-6 space-y-5">
                         @csrf
                         <div>
+                            <label class="text-sm font-medium text-slate-700" for="enrollment_subject_id">Subject</label>
+                            <select id="enrollment_subject_id" name="enrollment_subject_id" required
+                                class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                                <option value="">Select subject</option>
+                                @foreach ($subjects as $subject)
+                                    <option value="{{ $subject->id }}"
+                                        {{ old('enrollment_subject_id') == $subject->id ? 'selected' : '' }}>
+                                        {{ $subject->code }} - {{ $subject->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
                             <label class="text-sm font-medium text-slate-700" for="classroom_id">Class</label>
                             <select id="classroom_id" name="classroom_id" required
                                 class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-300">
@@ -143,7 +156,6 @@
                         </button>
                     </form>
                 </section>
-
 
             </div>
 
