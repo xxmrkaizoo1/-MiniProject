@@ -29,6 +29,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::delete('/admin/classes/{classroom}', [ClassroomController::class, 'destroy'])->name('admin.classrooms.destroy');
     Route::post('/admin/classes/enrollments', [ClassroomController::class, 'storeEnrollment'])
         ->name('admin.classrooms.enrollments.store');
+    Route::post('/admin/classes/lecturer-assignments', [ClassroomController::class, 'storeLecturerAssignment'])
+        ->name('admin.classrooms.lecturers.store');
 });
 
 Route::get('/dashboard', [LecturerDashboardController::class, 'dashboard'])

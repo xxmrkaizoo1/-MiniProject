@@ -16,10 +16,9 @@ class ClassroomController extends Controller
             ->orderBy('name')
             ->get();
         $subjects = Subject::orderBy('code')->get();
-        $lecturers = User::where('role', User::ROLE_LECTURER)->orderBy('name')->get();
         $students = User::where('role', User::ROLE_STUDENT)->orderBy('name')->get();
 
-        return view('admin.classrooms.index', compact('classrooms', 'subjects', 'lecturers', 'students'));
+        return view('admin.classrooms.index', compact('classrooms', 'subjects', 'students'));
     }
 
     public function store(Request $request)
@@ -90,6 +89,61 @@ class ClassroomController extends Controller
 
         return redirect()->route('admin.classrooms.index')
             ->with('success', 'Student assigned to class.');
+    }
+
+    public function storeLecturerAssignment(Request $request)
+    {
+        $validated = $request->validate([
+            'assign_classroom_id' => 'required|exists:classrooms,id',
+            'assign_lecturer_id' => 'nullable|exists:users,id',
+        ]);
+
+        $lecturerId = $validated['assign_lecturer_id'] ?? null;
+
+        if ($lecturerId) {
+            $lecturerExists = User::query()
+                ->whereKey($lecturerId)
+                ->where('role', '!=', User::ROLE_ADMIN)
+                ->exists();
+
+            if (! $lecturerExists) {
+                return redirect()
+                    ->route('admin.classrooms.index')
+                    ->withErrors(['assign_lecturer_id' => 'Selected user cannot be assigned as lecturer.'])
+                    ->withInput();
+            }
+        }
+
+        $classroom = Classroom::findOrFail($validated['assign_classroom_id']);
+        $previousLecturerId = $classroom->lecturer_id;
+
+        $classroom->update([
+            'lecturer_id' => $lecturerId,
+        ]);
+
+        if ($lecturerId) {
+            User::whereKey($lecturerId)
+                ->where('role', '!=', User::ROLE_ADMIN)
+                ->update(['role' => User::ROLE_LECTURER]);
+        }
+
+        if ($previousLecturerId && $previousLecturerId !== $lecturerId) {
+            $stillTeaching = Classroom::query()
+                ->where('lecturer_id', $previousLecturerId)
+                ->exists();
+
+            if (! $stillTeaching) {
+                User::query()
+                    ->whereKey($previousLecturerId)
+                    ->where('role', User::ROLE_LECTURER)
+                    ->update(['role' => User::ROLE_STUDENT]);
+            }
+        }
+
+        $successMessage = $lecturerId ? 'Lecturer assigned to class.' : 'Lecturer removed from class.';
+
+        return redirect()->route('admin.classrooms.index')
+            ->with('success', $successMessage);
     }
 
     public function destroy(Classroom $classroom)
