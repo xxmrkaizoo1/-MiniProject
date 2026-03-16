@@ -2,178 +2,365 @@
 
 ![Student Voice Hub logo](logo.svg)
 
-> A Laravel-based feedback portal for higher education classes. Students submit quick post-class feedback (ratings, mood checks, and optional comments), while lecturers and admins monitor trends, manage classes, and act on insights.
+> **Student Voice Hub** is a Laravel-based feedback system designed for higher education institutions.  
+> Students can submit quick feedback after each class, while lecturers and administrators monitor feedback trends and improve teaching quality using data insights and optional AI assistance.
 
 [![Laravel](https://img.shields.io/badge/Laravel-12-red)](https://laravel.com/)
 [![Vite](https://img.shields.io/badge/Vite-5-646CFF)](https://vitejs.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3-38B2AC)](https://tailwindcss.com/)
 
-## Table of Contents
+---
+
+# Table of Contents
 
 - [Features](#features)
 - [User Roles](#user-roles)
 - [Tech Stack](#tech-stack)
+- [System Overview](#system-overview)
 - [Requirements](#requirements)
 - [Getting Started](#getting-started)
 - [Role Setup](#role-setup)
 - [Useful Commands](#useful-commands)
-- [AI (Ollama)](#ai-ollama)
-- [Project Structure Highlights](#project-structure-highlights)
+- [AI Integration (Ollama)](#ai-integration-ollama)
+- [Project Structure](#project-structure)
+- [Development Guide](#development-guide)
+- [Future Improvements](#future-improvements)
 - [License](#license)
 
-## Features
+---
 
-- **Student feedback flow**: subject-specific ratings, mood ratings, optional comments, and an anonymous toggle.
-- **Lecturer dashboard**: class overview, feedback totals, average rating, and negative sentiment indicators.
-- **Admin tools**: manage subjects, create classes, enroll students, and review feedback lists.
-- **Action prompts**: a lightweight lecturer chatbot prompt helper to guide next-lesson actions.
-- **AI assistance**: optional local AI prompts powered by Ollama.
+# Features
 
-## User Roles
+Student Voice Hub focuses on **fast and structured classroom feedback**.
 
-- **Student**: submit feedback for enrolled subjects.
-- **Lecturer**: view class metrics and chatbot guidance on the dashboard.
-- **Admin**: manage subjects/classes, enroll students, and review all feedback.
+### Student Feedback Flow
 
-## Tech Stack
+Students can easily submit feedback after a class session.
 
-- **Backend**: Laravel 12
-- **Frontend**: Blade + Tailwind CSS
-- **Build**: Vite
-- **Database**: SQLite/MySQL (configurable)
-- **Exports**: dompdf (PDF)
+Features include:
 
-## Requirements
+- Subject-specific ratings
+- Mood selection (positive / neutral / negative)
+- Optional comment submission
+- Anonymous feedback option
 
+---
+
+### Lecturer Dashboard
+
+Lecturers can monitor feedback results through a dashboard.
+
+Dashboard features:
+
+- Class overview and statistics
+- Total feedback submissions
+- Average class rating
+- Detection of negative feedback trends
+- AI suggestions for improving the next lesson
+
+---
+
+### Admin Management Tools
+
+Administrators can manage the academic system.
+
+Admin tools include:
+
+- Subject management
+- Class creation and management
+- Student enrollment
+- Lecturer assignment
+- Full feedback review panel
+
+---
+
+### AI Assistance
+
+The system can optionally use **local AI models via Ollama** to generate teaching improvement suggestions based on student feedback.
+
+This helps lecturers:
+
+- identify learning issues
+- understand student sentiment
+- improve teaching strategies
+
+---
+
+# User Roles
+
+The system supports **three primary user roles**.
+
+### Student
+
+Students can:
+
+- submit feedback for enrolled subjects
+- rate lectures
+- share optional comments
+- choose anonymous feedback
+
+---
+
+### Lecturer
+
+Lecturers can:
+
+- monitor feedback trends
+- view class analytics
+- read student comments
+- receive AI suggestions
+
+---
+
+### Admin
+
+Administrators can:
+
+- manage subjects and classes
+- enroll students
+- assign lecturers
+- review feedback data
+
+---
+
+# Tech Stack
+
+Student Voice Hub is built using a **modern Laravel stack**.
+
+### Backend
+- Laravel 12
 - PHP 8.2+
+
+### Frontend
+- Blade Templates
+- Tailwind CSS
+- Vite
+
+### Database
+- SQLite
+- MySQL (optional)
+
+### Additional Tools
+- dompdf (PDF export)
+- Ollama (local AI models)
+
+---
+
+# System Overview
+
+The system follows a **standard MVC architecture**.
+
+Student
+↓
+Submit Feedback
+↓
+Laravel Controller
+↓
+Database Storage
+↓
+Lecturer Dashboard
+↓
+Analytics + AI Suggestions
+
+
+
+This architecture keeps the system **organized and easy to maintain**.
+
+---
+
+# Requirements
+
+Before installing the project, make sure your system has the following installed:
+
+- PHP 8.2 or newer
 - Composer
-- Node.js & npm
-- A supported database (SQLite or MySQL)
+- Node.js
+- npm
+- SQLite or MySQL database
 
-## Getting Started
+---
 
-### 1) Install dependencies
+# Getting Started
+
+### 1 Install Dependencies
 
 ```bash
 composer install
 npm install
-```
 
-### 2) Configure environment
 
-```bash
+2 Configure Environment
+
 cp .env.example .env
+
+
+Generate the application key:
+
 php artisan key:generate
-```
 
-### 3) Set up database
+3 Setup Database
 
-Update your `.env` file with the correct database credentials, then run:
+Update the .env file with your database configuration.
 
-```bash
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=student_voice_hub
+DB_USERNAME=root
+DB_PASSWORD=
+
+Run migrations and seed the database:
+
 php artisan migrate --seed
-```
 
-### 4) Run the app
+4 Run the Application
 
-```bash
+Start Laravel server:
+
 php artisan serve
+
+Run Vite:
+
 npm run dev
-```
 
-Open the app at `http://localhost:8000`.
+Open the application : 
 
-## Role Setup
+http://localhost:8000
 
-1. Log in as an admin (seeders create a default admin user).
-2. Create subjects and classes from the admin dashboard.
-3. Enroll students and assign lecturers.
-4. Students can submit feedback for their enrolled classes.
+Role Setup
 
-> Tip: Review the seeders in `database/seeders/` if you want to customize default users or demo data.
+After installation:
 
-## Useful Commands
+Log in as an admin user created by the seeders.
 
-| Task | Command |
-| --- | --- |
-| Run the local server | `php artisan serve` |
-| Run Vite dev server | `npm run dev` |
-| Build front-end assets | `npm run build` |
-| Run tests | `php artisan test` |
-| Clear caches | `php artisan optimize:clear` |
+Create subjects.
+
+Create classes.
+
+Assign lecturers to classes.
+
+Enroll students.
+
+Students can now begin submitting feedback.
 
 
-## AI (Ollama)
+Useful Commands
 
-The project can optionally use a local Ollama model for AI prompt assistance. Make sure Ollama is installed and running, then point the app to your local endpoint.
 
-1. Install Ollama from [https://ollama.com](https://ollama.com).
-2. Start the Ollama service and pull a model, for example:
+Task	Command
+Run Laravel server	php artisan serve
+Run Vite dev server	npm run dev
+Build frontend assets	npm run build
+Run tests	php artisan test
+Clear Laravel caches	php artisan optimize:clear
 
-```bash
+
+AI Integration (Ollama)
+
+Student Voice Hub supports local AI integration using Ollama.
+
+Install Ollama
+
+Download from:
+
+https://ollama.com
+
+
+Run a Model
+
+Example:
+
 ollama run llama3
-```
 
-3. Configure your `.env` with the Ollama base URL and model name (example):
+Configure Environment
 
-```
+Add this to your .env file:
+
 OLLAMA_BASE_URL=http://localhost:11434
 OLLAMA_MODEL=llama3
-```
 
-## Project Structure Highlights
 
-The project follows a standard Laravel layout with a few front-end and tooling additions for Tailwind and Vite.
+Project Structure
 
-```
 .
-├── app/                     # Core Laravel application code
-│   ├── Http/                # Controllers, middleware, form requests
-│   ├── Models/              # Eloquent models
-│   ├── Providers/           # Service providers
-│   └── View/                # View composers and related helpers
-├── bootstrap/               # Framework bootstrapping and cache
-├── config/                  # Application configuration
-├── database/                # Migrations, factories, seeders
-│   ├── factories/
+├── app/
+│   ├── Http/
+│   ├── Models/
+│   ├── Providers/
+│   └── View/
+├── bootstrap/
+├── config/
+├── database/
 │   ├── migrations/
+│   ├── factories/
 │   └── seeders/
-├── public/                  # Web root and static entry points
-├── resources/               # UI and front-end source
-│   ├── css/                 # Tailwind entry points
-│   ├── js/                  # Front-end scripts
-│   └── views/               # Blade templates
-├── routes/                  # Route definitions
-├── storage/                 # Logs, cache, user uploads
-├── tests/                   # Feature and unit tests
-├── artisan                  # Laravel CLI entry point
-├── composer.json            # PHP dependencies
-├── package.json             # Node dependencies
-└── vite.config.js           # Vite bundler configuration
-```
+├── public/
+├── resources/
+│   ├── css/
+│   ├── js/
+│   └── views/
+├── routes/
+├── storage/
+├── tests/
+├── artisan
+├── composer.json
+├── package.json
+└── vite.config.js
 
-### Where to make changes
 
-#### Back-end (Laravel)
-- **Controllers and middleware** live in `app/Http/`.
-- **Data models** are defined in `app/Models/`.
-- **Route wiring** happens in `routes/` (start with `routes/web.php`).
-- **Database changes** are tracked in `database/migrations/`, with seed data in `database/seeders/`.
+Development Guide
 
-#### Front-end (Blade + Tailwind)
-- **Views** are in `resources/views/`.
-- **Styles** start in `resources/css/`.
-- **Scripts** and light interactivity are in `resources/js/`.
 
-#### Tooling and configuration
-- **Laravel and package configuration** is in `config/`.
-- **Vite** and **Tailwind** settings live in `vite.config.js` and `tailwind.config.js`.
-- **Environment variables** go in `.env` (based on `.env.example`).
+Backen :
 
-#### Tests
-- **Feature tests** are in `tests/Feature/`.
-- **Unit tests** are in `tests/Unit/`.
+app/Http/Controllers
+app/Models
+routes/web.php
+database/migrations
 
-## License
+Frontend : 
 
-This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+resources/views
+resources/css
+resources/js
+
+
+
+Future Improvements
+
+Possible improvements:
+
+sentiment analysis for comments
+
+advanced feedback analytics
+
+email alerts for negative feedback
+
+REST API support
+
+mobile UI optimization
+
+License
+
+This project is licensed under the MIT License.
+
+---
+
+✅ Now your README will:
+
+- render **correctly on GitHub**
+- have **clean sections**
+- look **professional for portfolio or internship**
+
+---
+
+If you want, I can also help you add **3 things that make your README look like a senior developer project**:
+
+- screenshots section 📸  
+- system architecture diagram 🧠  
+- database ERD diagram 🗄️  
+
+These make your project look **10× more impressive on GitHub.**
+
+
+
