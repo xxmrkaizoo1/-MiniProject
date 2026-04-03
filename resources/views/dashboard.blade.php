@@ -279,7 +279,45 @@
                                     class="mb-2 text-xs font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-300">
                                     {{ $section['title'] }}
                                 </p>
-                                <div class="whitespace-pre-line leading-6">{{ $section['content'] }}</div>
+                                @php
+                                    $sectionLines = preg_split('/\R/', $section['content']) ?: [];
+                                    $sectionItems = [];
+                                    $sectionParagraphs = [];
+
+                                    foreach ($sectionLines as $line) {
+                                        $trimmedLine = trim($line);
+
+                                        if ($trimmedLine === '') {
+                                            continue;
+                                        }
+
+                                        if (preg_match('/^[\-•*]\s*(.+)$/u', $trimmedLine, $matches)) {
+                                            $sectionItems[] = trim($matches[1]);
+                                            continue;
+                                        }
+
+                                        $sectionParagraphs[] = $trimmedLine;
+                                    }
+                                @endphp
+
+                                @if (!empty($sectionParagraphs))
+                                    <div class="space-y-2 leading-6">
+                                        @foreach ($sectionParagraphs as $paragraph)
+                                            <p>{{ $paragraph }}</p>
+                                        @endforeach
+                                    </div>
+                                @endif
+
+                                @if (!empty($sectionItems))
+                                    <ul class="mt-3 space-y-2">
+                                        @foreach ($sectionItems as $item)
+                                            <li
+                                                class="rounded-lg border border-indigo-100 bg-indigo-50/70 px-3 py-2 text-sm leading-6 text-slate-700 dark:border-indigo-400/30 dark:bg-indigo-500/10 dark:text-slate-100">
+                                                {{ $item }}
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                @endif
                             </article>
 
                             @if ($loop->last)
