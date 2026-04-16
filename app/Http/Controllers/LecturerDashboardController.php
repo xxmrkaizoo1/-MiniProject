@@ -688,7 +688,11 @@ class LecturerDashboardController extends Controller
                     }
                 }
             } catch (ConnectionException) {
-                     dd($this->normalizeShortAdvice("Focus Are" ($issues)));
+
+            // Fix later
+                return $this->normalizeShortAdvice(
+                    "Focus areas: {$issuesLine}. Unable to reach AI service, so run one quick check-in and one recap activity next class."
+                );
             }
         }
 
