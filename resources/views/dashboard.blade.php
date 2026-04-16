@@ -470,3 +470,46 @@
     </div>
     </div>
 @endsection
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const prompt = document.getElementById('prompt');
+            const counter = document.getElementById('prompt-counter');
+            const chips = document.querySelectorAll('.prompt-chip');
+
+            if (!prompt || !counter) {
+                return;
+            }
+
+            const updatePromptUi = () => {
+                const length = prompt.value.length;
+                counter.textContent = `${length}/500`;
+                counter.classList.toggle('text-rose-500', length > 450);
+
+                prompt.style.height = 'auto';
+                prompt.style.height = `${Math.min(prompt.scrollHeight, 220)}px`;
+            };
+
+            prompt.addEventListener('input', updatePromptUi);
+
+            chips.forEach((chip) => {
+                chip.addEventListener('click', () => {
+                    const suggestion = chip.dataset.value || '';
+
+                    if (prompt.value.trim().length > 0) {
+                        prompt.value = `${prompt.value.trim()}\n${suggestion}`;
+                    } else {
+                        prompt.value = suggestion;
+                    }
+
+                    prompt.dispatchEvent(new Event('input', {
+                        bubbles: true
+                    }));
+                    prompt.focus();
+                });
+            });
+
+            updatePromptUi();
+        });
+    </script>
+@endpush
