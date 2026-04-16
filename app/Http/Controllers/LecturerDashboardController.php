@@ -684,11 +684,11 @@ class LecturerDashboardController extends Controller
                 if ($response->ok()) {
                     $generated = trim((string) $response->json('response'));
                     if ($generated !== '') {
-                        return $generated;
+                        return $this->normalizeShortAdvice($generated);
                     }
                 }
             } catch (ConnectionException) {
-                // Fallback below.
+                     dd($this->normalizeShortAdvice("Focus Are" ($issues)));
             }
         }
 
@@ -697,7 +697,56 @@ class LecturerDashboardController extends Controller
             $action = 'Saya akan memberi fokus kepada isu-isu yang paling kritikal terlebih dahulu sebelum membincangkan perkara sampingan';
         }
 
-        return "Focus areas: {$issuesLine}. {$action}";
+        return $this->normalizeShortAdvice("Focus areas: {$issuesLine}. {$action}");
+    }
+
+    private function normalizeShortAdvice(string $text): string
+    {
+        $cleaned = preg_replace('/\*\*(.*?)\*\*/', '$1', $text) ?? $text;
+        $rawLines = preg_split('/\R+/', trim($cleaned)) ?: [];
+        $items = [];
+
+        foreach ($rawLines as $line) {
+            $line = trim($line);
+            if ($line === '') {
+                continue;
+            }
+
+            if (preg_match('/^\s*(?:[-•*]|\d+[.)])\s*(.+)$/u', $line, $matches)) {
+                $items[] = trim($matches[1]);
+                continue;
+            }
+
+            if (! preg_match('/^\s*[A-Za-z ]{2,30}:\s*$/', $line)) {
+                $items[] = $line;
+            }
+        }
+
+        if ($items === []) {
+            $items = preg_split('/(?<=[.?!])\s+/', trim($cleaned)) ?: [];
+        }
+
+        $items = collect($items)
+            ->map(fn($item) => trim((string) $item, " \t\n\r\0\x0B-•*1234567890.)"))
+            ->filter()
+            ->take(3)
+            ->map(fn($item) => '- ' . $this->shortenAdviceLine($item))
+            ->values()
+            ->all();
+
+        if ($items === []) {
+            return '- Review the top issue and give one clear next step.';
+        }
+
+        return implode("\n", $items);
+    }
+
+    private function shortenAdviceLine(string $line): string
+    {
+        $line = preg_replace('/\s+/', ' ', $line) ?? $line;
+        $line = trim($line, " \t\n\r\0\x0B.:-");
+
+        return Str::limit($line, 95, '...');
     }
 
 
